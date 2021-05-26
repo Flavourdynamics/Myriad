@@ -1,40 +1,22 @@
-#include "Arduino.h"
-#include "Myriad.h"
+#ifndef Myriad_Tools_h
+#define Myriad_Tools_h
 
-Myriad::Morse(int pin){ // this creates the library object and runs in in initialization
-  pinMode(pin, OUTPUT);
-  _pin = pin;
-}
-
-void Morse::dot(){
-  digitalWrite(_pin, HIGH);
-  delay(250);
-  digitalWrite(_pin, LOW);
-  delay(250);  
-}
-
-void Morse::dash(){
-  digitalWrite(_pin, HIGH);
-  delay(1000);
-  digitalWrite(_pin, LOW);
-  delay(250);
-}
 // Includes lots of core functionality
 
 extern SimplePatternList PATTERNlist;
 
-uint16_t Myriad::XY(byte x, byte y) {
+uint16_t XY(byte x, byte y) {
   uint16_t LEDaddress = x * LEDper + y;
   return LEDaddress;
 }
 
-void Myriad::huepusher(int8_t hueinc, uint8_t zval, uint8_t timer1) {
+void huepusher(int8_t hueinc, uint8_t zval, uint8_t timer1) {
   EVERY_N_MILLIS(timer1) {
     hue[zval] += hueinc;
   }
 }
 
-void Myriad::peroidictasks(){
+void peroidictasks(){
   EVERY_N_MILLIS(500){
     random16_add_entropy(analogRead(0));  
     Serial.print("FPS: ");
@@ -44,7 +26,7 @@ void Myriad::peroidictasks(){
     //MPUprint();  
   }
 }
-void Myriad::fader() {
+void fader() {
   if (currfade > targfade) {              // can change this to make it blend down instead of just up
     currfade = targfade;
   } else if (currfade < targfade) {
@@ -60,7 +42,7 @@ void Myriad::fader() {
   //fadeToBlackBy( leds2, LEDtotal, currfade);
 }
 
-void Myriad::shuffler(){
+void shuffler(){
   // Shuffle Pattern
   EVERY_N_SECONDS_I(shufloop, STATEshuffleinterval){
     if(patshuffle == true){
@@ -77,7 +59,7 @@ void Myriad::shuffler(){
   }
 }
 
-void Myriad::blackout() {
+void blackout() {
   for ( int i = 0; i < LEDtotal; i++) {
     leds[i] = CRGB(0, 0, 0);
     //leds2[i] = CRGB(0,0,0);
@@ -85,7 +67,7 @@ void Myriad::blackout() {
 }
 
 ////////////////////////// Crossfader //////////////////////////////////////////
-void Myriad::crossfader() {
+void crossfader() {
   EVERY_N_MILLIS_I(mainloop, STATEloopinterval){
     fader();
     if (crossct >= 255) {
@@ -154,7 +136,7 @@ void crossfader2() {
   mainloop.setPeriod(STATEloopinterval);
 }*/
 
-uint8_t Myriad::fetcher(uint8_t oldcheck) {       // Get which counters should be used
+uint8_t fetcher(uint8_t oldcheck) {       // Get which counters should be used
   if (oldcheck == oldpattern) {
     return 0;
   } else {
@@ -163,7 +145,7 @@ uint8_t Myriad::fetcher(uint8_t oldcheck) {       // Get which counters should b
 }
 
 // blurColumns: perform a blur1d on each column of a rectangular matrix
-void Myriad::blurColumnsv3(CRGB* leds, uint8_t height, uint8_t width, fract8 blur_amount) {
+void blurColumnsv3(CRGB* leds, uint8_t height, uint8_t width, fract8 blur_amount) {
   // blur columns
   uint8_t keep = 255 - blur_amount;
   uint8_t seep = blur_amount >> 1;
@@ -186,12 +168,12 @@ void Myriad::blurColumnsv3(CRGB* leds, uint8_t height, uint8_t width, fract8 blu
   }
 }
 
-void Myriad::blur(CRGB* leds, uint8_t height, uint8_t width, fract8 blur_amount) {                        //  leds[i]*=2; to multiply brightness
+void blur(CRGB* leds, uint8_t height, uint8_t width, fract8 blur_amount) {                        //  leds[i]*=2; to multiply brightness
   blurColumnsv3( leds, height, width, blur_amount);
   blurRows( leds, height, width, blur_amount * 0.89);         //.86 seems to work
 }
 
-void Myriad::palettetargeting(uint8_t paldefault) {     // Select which palette to blend to
+void palettetargeting(uint8_t paldefault) {     // Select which palette to blend to
   // Match, Random, Startup, Purplecascade, Blackwhite, Newspaper, Sunburst, Gilt, Tropicana, BorderRainbow, Redyell, Rainbow, RainbowStripe, Cloud, Party, Lava, Ocean, Forest, Heat
   uint8_t paltarget = palnum;
 
@@ -306,7 +288,7 @@ void Myriad::palettetargeting(uint8_t paldefault) {     // Select which palette 
 ////////////////////////// Colour Conversion //////////////////////////////////////////
 // uint16_t txtcolor = Color24toColor16(Wheel(map(letters[l], '0', 'Z', 255, 0)));
 
-uint16_t Myriad::Color24toColor16(uint32_t color) {
+uint16_t Color24toColor16(uint32_t color) {
   return ((uint16_t)(((color & 0xFF0000) >> 16) & 0xF8) << 8) |
          ((uint16_t)(((color & 0x00FF00) >>  8) & 0xFC) << 3) |
          (((color & 0x0000FF) >>  0)         >> 3);
@@ -314,7 +296,7 @@ uint16_t Myriad::Color24toColor16(uint32_t color) {
 
 // Input a value 0 to 255 to get a color value.
 // The colours are a transition r - g - b - back to r.
-uint32_t Myriad::Wheel(byte WheelPos) {
+uint32_t Wheel(byte WheelPos) {
   uint32_t wheel = 0;
 
   // Serial.print(WheelPos);
@@ -334,4 +316,5 @@ uint32_t Myriad::Wheel(byte WheelPos) {
   // Serial.println(wheel, HEX);
   return (wheel);
 }
+
 #endif
