@@ -3,16 +3,16 @@
 
 ////////// Comment out uncessary components //////////
 #define Myriad_2D_Patterns  // LED patterns designed for a two dimensional LED matrix
-//#define Myriad_Display      // Functions for using connected I2C displays
-#define Myriad_Arrays       // Static array database of images and sprites for display on a 2D matrix
 #define Myriad_EQ           // Processes audio data
+#define Myriad_Display      // Functions for using connected I2C displays
+#define Myriad_Arrays       // Static array database of images and sprites for display on a 2D matrix
 //#define Myriad_Gyro         // Functions for reading and processing gyroscope/accelerometer data
 #define Myriad_Fonts        // Fonts database for printing text 
 #define Myriad_BT           // Provides bluetooth serial data processing
-#define Myriad_Testbed      // A file for testing patterns in the full environment
+//#define Myriad_Testbed      // A file for testing patterns in the full environment
 
 ////////// FastLED Setup //////////
-//#define FASTLED_INTERNAL  // Hides fastled compiler info
+#define FASTLED_INTERNAL  // Hides fastled compiler info
 #define FASTLED_ESP32_I2S true  // Engages the I2S driver
 //#define FASTLED_RMT_MAX_CHANNELS 8
 //#define FASTLED_RMT_MEM_BLOCKS 2
@@ -99,32 +99,17 @@ TaskHandle_t Core0;
 bool frameready = false;  // Perhaps for splitting the creating and writing of frames
 
 ////////// Core components //////////
-#include "Myriad_Tools.h"
 #include "Myriad_Palettes.h"
-#include "Wire.h" // Where is this used?
+#include "Myriad_Tools.h"
 
-#ifdef Myriad_2D_Patterns
-  #include "Myriad_2D_Patterns.h"
-#endif
-#ifdef Myriad_Display
-  #include "Myriad_Display.h"
+#ifdef Myriad_Fonts
+  #include "Myriad_Fonts.h"
 #endif
 #ifdef Myriad_Arrays
   #include "Myriad_Arrays.h"
 #endif
-#ifdef Myriad_EQ
-  #include "Myriad_EQ.h"
-#endif
-#ifdef Myriad_Gyro
-  #include "Myriad_Gyro.h"
-#endif
-#ifdef Myriad_Fonts
-  #include "Myriad_Fonts.h"
-#endif
-#ifdef Myriad_Testbed
-  #include "Myriad_Testbed.h"
-#endif
 #ifdef Myriad_BT
+  #include <BluetoothSerial.h>
   // Bluetooth
   BluetoothSerial Bluetooth;
   const byte BTnumchars = 20;
@@ -135,6 +120,22 @@ bool frameready = false;  // Perhaps for splitting the creating and writing of f
   char BTmessage[BTnumchars];
   uint8_t BTupcount;
   #include "Myriad_BT.h"
-  #include <BluetoothSerial.h>
 #endif
+#ifdef Myriad_EQ
+  #include "Myriad_EQ.h"
+#endif
+#ifdef Myriad_2D_Patterns
+  #include "Myriad_2D_Patterns.h"
+#endif
+#ifdef Myriad_Display
+  #include "Myriad_Display.h"
+#endif
+#ifdef Myriad_Gyro
+  #include "Myriad_Gyro.h"
+#endif
+
+#ifdef Myriad_Testbed
+  #include "Myriad_Testbed.h"
+#endif
+
 #endif

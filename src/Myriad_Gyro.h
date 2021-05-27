@@ -2,7 +2,6 @@
 #define Myriad_Gyro_h
 
 // Include order may need to be unified in sketch
-#include "heltec.h"
 #include "Wire.h"
 
 const int MPUaddr=0x68;  // I2C address of the MPU-6050
@@ -50,27 +49,29 @@ void MPUread(){
   GyZ=(int16_t)(Wire1.read()<<8|Wire1.read())/131.00;   // 0x47 (GYRO_ZOUT_H) & 0x48 (GYRO_ZOUT_L)'
 }
 
-void MPUoled(){
-  Heltec.display->clear();
-  Heltec.display->setLogBuffer(5, 30);
-  Heltec.display->print("Acc: ");
-  Heltec.display->print(AcX);
-  Heltec.display->print(", ");
-  Heltec.display->print(AcY);
-  Heltec.display->print(", ");
-  Heltec.display->println(AcZ);
+#ifdef Myriad_Display
+  void MPUoled(){
+    Heltec.display->clear();
+    Heltec.display->setLogBuffer(5, 30);
+    Heltec.display->print("Acc: ");
+    Heltec.display->print(AcX);
+    Heltec.display->print(", ");
+    Heltec.display->print(AcY);
+    Heltec.display->print(", ");
+    Heltec.display->println(AcZ);
 
-  Heltec.display->print("Gyro: ");
-  Heltec.display->print(GyX);
-  Heltec.display->print(", ");
-  Heltec.display->print(GyY);
-  Heltec.display->print(", ");
-  Heltec.display->println(GyZ);
+    Heltec.display->print("Gyro: ");
+    Heltec.display->print(GyX);
+    Heltec.display->print(", ");
+    Heltec.display->print(GyY);
+    Heltec.display->print(", ");
+    Heltec.display->println(GyZ);
 
-  Heltec.display->print(Tmp);
-  Heltec.display->println("°C");
+    Heltec.display->print(Tmp);
+    Heltec.display->println("°C");
 
-  Heltec.display->drawLogBuffer(0, 0);
-  Heltec.display->display();
-}
+    Heltec.display->drawLogBuffer(0, 0);
+    Heltec.display->display();
+  }
+#endif
 #endif

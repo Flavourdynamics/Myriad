@@ -42,6 +42,24 @@ void fader() {
   //fadeToBlackBy( leds2, LEDtotal, currfade);
 }
 
+void patcrossproc(int newpatnum){                                // Every time you switch patterns run this to begin crossfading
+  Serial.print("proc - new pat num: ");
+  Serial.println(newpatnum);
+  targfade = faderlookup[newpatnum];
+  oldpattern = patternum;                           // set the current pattern to be the old one so we can make it use the same variables
+  crossct = 0;                                      // reset the blend amount
+  patternum = newpatnum;                                      // increase pattern number   -> this just goes in sequence, but the best part of this is that you can control this by remote or any other system  
+
+  rowcount[0] = rowcount[1];          // copy row status to default rows, and reset them for the new pattern
+  rowcount[1] = 0;
+  colcount[0] = colcount[1];
+  colcount[1] = 0;
+  count[0] = count[1];
+  count[1] = 0;
+  hue[0] = hue[1];
+  hue[1] = 0;
+}
+
 void shuffler(){
   // Shuffle Pattern
   EVERY_N_SECONDS_I(shufloop, STATEshuffleinterval){
