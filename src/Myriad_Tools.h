@@ -114,45 +114,21 @@ void crossfader() {
     FastLED.show();
   }
   mainloop.setPeriod(STATEloopinterval);
-  if (LEDcurbright != LEDtargbright){
-    if(LEDcurbright < LEDtargbright){ // This fades brightness instead of it being sudden
-      LEDcurbright++;
-    } else if (LEDcurbright > LEDtargbright){
-      LEDcurbright--;
+  if(LEDonoff == 1){
+    if (LEDcurbright != LEDtargbright ){
+      if(LEDcurbright < LEDtargbright){ // This fades brightness instead of it being sudden
+        LEDcurbright++;
+      } else if (LEDcurbright > LEDtargbright){
+        LEDcurbright--;
+      }
+      FastLED.setBrightness(LEDcurbright);
     }
+  }
+  else if(LEDcurbright > 0){
+    LEDcurbright--; 
     FastLED.setBrightness(LEDcurbright);
   }
 }
-/*
-void crossfader2() {
-  EVERY_N_MILLIS_I(mainloop, STATEloopinterval){
-    fader();
-    if (crossct >= 255) {
-      PATTERNlist[patternum]();   // run completed pattern only when fading is complete
-    }
-    else if (crossct < 255) {
-      EVERY_N_MILLIS(7) {                                                                                        // half this and below
-        crossct += 1;         // higher increase faster xfade
-      }
-      if (crossct > 255) { // overflow prevention
-        crossct = 255;
-      }
-  
-      PATTERNlist[oldpattern]();    // Run the old pattern and save to array
-      for (uint16_t i = 0; i < LEDtotal; i++) {
-        leds2[i] = leds[i];
-      }
-  
-      PATTERNlist[patternum]();   // Run the new pattern and save to array // Removed extra buffering
-  
-      for (uint16_t i = 0; i < LEDtotal; i++) {   // blend em
-        leds[i] = blend( leds2[i], leds[i], crossct);   // Blend arrays of LEDs, third value is blend %
-      }
-    }
-    frameready = true;
-  }
-  mainloop.setPeriod(STATEloopinterval);
-}*/
 
 uint8_t fetcher(uint8_t oldcheck) {       // Get which counters should be used
   if (oldcheck == oldpattern) {

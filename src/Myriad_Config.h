@@ -52,6 +52,7 @@ FastLED_NeoMatrix *matrix = new FastLED_NeoMatrix(leds, LEDtilewidth, LEDtilehei
 #define LEDtype WS2813
 #define LEDcorr TypicalSMD5050
 #define LEDdither 255     //try 0 to reduce flickering
+#define LEDonoff = true;
 uint8_t LEDcurbright = 0;
 uint8_t LEDtargbright = 5;
 uint16_t LEDamps = 2000;
