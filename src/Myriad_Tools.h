@@ -1,56 +1,64 @@
-#ifndef Myriad_Tools_h
-#define Myriad_Tools_h
-
+#ifndef Lampert_Tools_h
+#define Lampert_Tools_h
 // Includes lots of core functionality
+extern NamedPattern Pattern_List[];
 
-extern SimplePatternList PATTERNlist;
+void peroidictasks(){
+  EVERY_N_MILLIS(500){
+    random16_add_entropy(analogRead(A5));  
+    Serial.print("Pattern: ");
+    Serial.print(Pattern_List[patternum].Name.c_str());
+    Serial.print("  ---  Palette: ");
+    if(palmatch == false){
+      Serial.print(Palette_List[palnum].Name);
+    }
+    else {
+      Serial.print("Match");
+    }
+    Serial.print("  ---  FPS: ");
+    Serial.print(LEDS.getFPS());
+    Serial.print("  ---  POWER: ");
+    Serial.println(calculate_unscaled_power_mW(leds, LEDtotal)/5);
+    preferences_update();
+  }
+}
 
-uint16_t XY(byte x, byte y) {
+uint16_t XY(uint16_t x, uint16_t y) {
   uint16_t LEDaddress = x * LEDper + y;
   return LEDaddress;
 }
 
-void huepusher(int8_t hueinc, uint8_t zval, uint8_t timer1) {
-  EVERY_N_MILLIS(timer1) {
-    hue[zval] += hueinc;
+void huepusher(bool newPL, int8_t hueinc,  uint8_t huespeed) {
+  if(newPL == false){
+    EVERY_N_MILLIS(huespeed) {
+      hue[0] += hueinc;
+    }
+  }
+  if(newPL == true){
+    EVERY_N_MILLIS(huespeed) {
+      hue[1] += hueinc;
+    }
   }
 }
 
-void peroidictasks(){
-  EVERY_N_MILLIS(500){
-    random16_add_entropy(analogRead(0));  
-    Serial.print("FPS: ");
-    Serial.print(LEDS.getFPS());
-    Serial.print(" POWER: ");
-    Serial.println(calculate_unscaled_power_mW(leds, LEDtotal)/5/100);
-    //MPUprint();  
+void fader(bool newPL, byte fadeval) {
+  if (newPL == true){
+    targfade = fadeval;
+    fadeToBlackBy( leds, LEDtotal, currfade);
   }
-}
-void fader() {
   if (currfade > targfade) {              // can change this to make it blend down instead of just up
     currfade = targfade;
-  } else if (currfade < targfade) {
+  }
+  else if (currfade < targfade) {
     currfade++;
   }
-  /*
-  Serial.print("curr: ");
-  Serial.print(currfade);
-  Serial.print("         targ: ");
-  Serial.println(targfade);
-  */
-  fadeToBlackBy( leds, LEDtotal, currfade);
-  //fadeToBlackBy( leds2, LEDtotal, currfade);
 }
 
-void patcrossproc(int newpatnum){                                // Every time you switch patterns run this to begin crossfading
-  Serial.print("proc - new pat num: ");
-  Serial.println(newpatnum);
-  targfade = faderlookup[newpatnum];
-  oldpattern = patternum;                           // set the current pattern to be the old one so we can make it use the same variables
-  crossct = 0;                                      // reset the blend amount
-  patternum = newpatnum;                                      // increase pattern number   -> this just goes in sequence, but the best part of this is that you can control this by remote or any other system  
-
-  rowcount[0] = rowcount[1];          // copy row status to default rows, and reset them for the new pattern
+void patcrossproc(int newpatnum){         // Every time you switch patterns run this to begin crossfading
+  crossct = 0;    // reset the blend amount
+  oldpattern = patternum;       // set the current pattern to be the old one so we can make it use the same variables
+  patternum = newpatnum;        // save input to current pattern
+  rowcount[0] = rowcount[1];    // copy row status to default rows, and reset them for the new pattern
   rowcount[1] = 0;
   colcount[0] = colcount[1];
   colcount[1] = 0;
@@ -58,23 +66,41 @@ void patcrossproc(int newpatnum){                                // Every time y
   count[1] = 0;
   hue[0] = hue[1];
   hue[1] = 0;
+  Serial.print("New pattern : ");
+  Serial.print(newpatnum);
+  Serial.print(" - ");
+  Serial.println(Pattern_List[patternum].Name);
 }
 
+extern const uint16_t NUMpatterns;
+extern uint8_t palnum;
+extern uint16_t patternselectID;
+extern uint16_t paletteselectID;
+#include "ESPUI.h"
+extern ESPUIClass ESPUI;
 void shuffler(){
   // Shuffle Pattern
   EVERY_N_SECONDS_I(shufloop, STATEshuffleinterval){
     if(patshuffle == true){
-      patcrossproc(random8(1, 20));     // Choose range that skips unwanted shuffles
+      patcrossproc(random8(NUMpatterns));     // Choose range that skips unwanted shuffles
     }
+    ESPUI.updateControlValue(patternselectID, String(patternum));   
   }
   shufloop.setPeriod(STATEshuffleinterval);
+
   // Palette Shuffle
-  if(palnum == 0){
-    currentPalette = targetPalette;
-  } else {
-    nblendPaletteTowardPalette( currentPalette, targetPalette, blendspeed);
-    nblendPaletteTowardPalette( currentPalette, targetPalette, blendspeed);
-  }
+  if(palshuff == true){
+    EVERY_N_SECONDS_I(palshufloop, STATEpalshuffleinterval) {
+      palnum = random(NUMpalettes);
+      targetPalette = Palette_List[palnum].Palette;
+      Serial.print("New palette : ");
+      Serial.print(palnum);
+      Serial.print(" - ");
+      Serial.println(Palette_List[palnum].Name);
+      ESPUI.updateControlValue(paletteselectID, String(palnum));
+    }
+    palshufloop.setPeriod(STATEpalshuffleinterval);
+  }  // Update UI to display values stored in NVS
 }
 
 void blackout() {
@@ -84,69 +110,92 @@ void blackout() {
   }
 }
 
-////////////////////////// Crossfader //////////////////////////////////////////
-void crossfader() {
+void brightnessfader(){ // Move brightness to set value gradually
+  EVERY_N_MILLIS(20){
+    if(LEDonoff == true){                         // If leds are ssupposed to be on
+      if (LEDcurbright != LEDtargbright ){        // and the current brightness is not at the target
+        if(LEDcurbright < LEDtargbright){         // and if the current brightness is LOWER than target
+          LEDcurbright++;                         // increase the current brightness
+        }
+        else if (LEDcurbright > LEDtargbright){   // Otherwise, if the current brightness is HIGHER than target
+          LEDcurbright--;                         // decrease current brightness
+        }
+        FastLED.setBrightness(LEDcurbright);      // If we had to change current brightness, then apply change
+      }
+    }
+    else if (LEDcurbright > 0){                   // If LEDonoff is set to off, and 
+      LEDcurbright--;                             // reduce current brightness
+      FastLED.setBrightness(LEDcurbright);        // and apply the change
+    }
+  }
+}
+
+void palettetargeting(TProgmemRGBGradientPalettePtr matchpal) {     // Select which palette behaviour
+  if(palmatch == true){
+    // If the palette is to match the pattern, then switch it immediately every time
+    // Must swap other time to keep unique palettes during crossfading
+    currentPalette = matchpal;
+  }
+  else {
+    // Otherwise, if setting palettes manually, just set the target and allow it to be blended
+    targetPalette = Palette_List[palnum].Palette;
+    // Blend towards target
+    nblendPaletteTowardPalette( currentPalette, targetPalette, blendspeed); // there are 2, because blendspeed is capped at ~48
+    nblendPaletteTowardPalette( currentPalette, targetPalette, blendspeed);
+  }
+}
+
+void patrunproc(bool newPL, byte fadeamt, int8_t hueinc, uint8_t huespeed, TProgmemRGBGradientPalettePtr procpal){
+  // This function does applies all the settings that change between patterns
+  huepusher(newPL, hueinc, huespeed);  // Increment the relevant hue interval
+  fader(newPL, fadeamt);
+  palettetargeting(procpal);
+}
+
+void fastruntasks(){
+  EVERY_N_MILLIS(3){
+    brightnessfader();
+    shuffler();
+  }
+}
+
+void crossfader() {  ////////////////////////// Crossfader //////////////////////////////////////////
   EVERY_N_MILLIS_I(mainloop, STATEloopinterval){
-    fader();
-    if (crossct >= 255) {
-      PATTERNlist[patternum]();   // run completed pattern only when fading is complete
+    if (crossct >= 255) { 
+      Pattern_List[patternum].Pattern(true);   // run completed pattern only when fading is complete
     }
     else if (crossct < 255) {
-      EVERY_N_MILLIS(7) {                                                                                        // half this and below
-        crossct += 1;         // higher increase faster xfade
+      EVERY_N_MILLIS(20) {
+        crossct += 1;           // higher increase faster xfade
       }
-      if (crossct > 255) { // overflow prevention
-        crossct = 255;
-      }
+      Serial.println(crossct);
+      Pattern_List[oldpattern].Pattern(false);    // Run the old pattern and save to array, bool false = oldpat
+      //for (uint16_t i = 0; i < LEDtotal; i++) {   // blend em
+      //  leds2[i] = leds[i];   // Blend arrays of LEDs, third value is blend %
+      //}
+      memcpy8 (leds2, leds, LEDtotal); // __attribute__((noinline))
+      //leds2 = leds;
   
-      PATTERNlist[oldpattern]();    // Run the old pattern and save to array
-      for (uint16_t i = 0; i < LEDtotal; i++) {
-        leds2[i] = leds[i];
-      }
-  
-      PATTERNlist[patternum]();   // Run the new pattern and save to array // Removed extra buffering
-  
+      Pattern_List[patternum].Pattern(true);   // Run the new pattern and save to array, bool true = newpat
       for (uint16_t i = 0; i < LEDtotal; i++) {   // blend em
         leds[i] = blend( leds2[i], leds[i], crossct);   // Blend arrays of LEDs, third value is blend %
       }
+      //leds = blend( leds2, leds, crossct);
     }
-         
     FastLED.show();
   }
   mainloop.setPeriod(STATEloopinterval);
-  if(LEDonoff == 1){
-    if (LEDcurbright != LEDtargbright ){
-      if(LEDcurbright < LEDtargbright){ // This fades brightness instead of it being sudden
-        LEDcurbright++;
-      } else if (LEDcurbright > LEDtargbright){
-        LEDcurbright--;
-      }
-      FastLED.setBrightness(LEDcurbright);
-    }
-  }
-  else if(LEDcurbright > 0){
-    LEDcurbright--; 
-    FastLED.setBrightness(LEDcurbright);
-  }
-}
-
-uint8_t fetcher(uint8_t oldcheck) {       // Get which counters should be used
-  if (oldcheck == oldpattern) {
-    return 0;
-  } else {
-    return 1;
-  }
 }
 
 // blurColumns: perform a blur1d on each column of a rectangular matrix
-void blurColumnsv3(CRGB* leds, uint8_t height, uint8_t width, fract8 blur_amount) {
+void blurColumnsv3(CRGB* leds, uint16_t height, uint16_t width, fract8 blur_amount) {
   // blur columns
   uint8_t keep = 255 - blur_amount;
   uint8_t seep = blur_amount >> 1;
 
-  for ( uint8_t col = 0; col < width; col++) {
+  for ( uint16_t col = 0; col < width; col++) {
     CRGB carryover = CRGB::Black;
-    for ( uint8_t i = 0; i < height; i++) {
+    for ( uint16_t i = 0; i < height; i++) {
       //CRGB cur = leds[XY(col,i)];
       CRGB cur = leds[XY(i, col)];
       CRGB part = cur;
@@ -162,122 +211,45 @@ void blurColumnsv3(CRGB* leds, uint8_t height, uint8_t width, fract8 blur_amount
   }
 }
 
-void blur(CRGB* leds, uint8_t height, uint8_t width, fract8 blur_amount) {                        //  leds[i]*=2; to multiply brightness
-  blurColumnsv3( leds, height, width, blur_amount);
-  blurRows( leds, height, width, blur_amount * 0.89);         //.86 seems to work
-}
-
-void palettetargeting(uint8_t paldefault) {     // Select which palette to blend to
-  // Match, Random, Startup, Purplecascade, Blackwhite, Newspaper, Sunburst, Gilt, Tropicana, BorderRainbow, Redyell, Rainbow, RainbowStripe, Cloud, Party, Lava, Ocean, Forest, Heat
-  uint8_t paltarget = palnum;
-
-  if (palnum == 0) {
-    paltarget = paldefault;
-  }
-  if (palnum == 1) {
-    EVERY_N_SECONDS_I(palshufloop, STATEpalshuffleinterval) {
-      paltarget = random8(2, 19);
+void blurRows1( CRGB* leds, uint16_t width, uint16_t height, fract8 blur_amount){
+/*    for( uint8_t row = 0; row < height; row++) {
+        CRGB* rowbase = leds + (row * width);
+        blur1d( rowbase, width, blur_amount);
     }
-    palshufloop.setPeriod(STATEpalshuffleinterval);
-  }
-  switch (paltarget) {
-    case 2:
-      targetPalette = startup;
-      //Serial.println("palette: startup");
-      break;
-    case 3:
-      targetPalette = purplecascade;
-      //Serial.println("palette: purplecascade");
-      break;
-    case 4:
-      targetPalette = blackwhite;
-      //Serial.println("palette: blackwhite");
-      break;
-    case 5:
-      targetPalette = newspaper;
-      //Serial.println("palette: newspaper");
-      break;
-    case 6:
-      targetPalette = sunburst;
-      //Serial.println("palette: sunburst");
-      break;
-    case 7:
-      targetPalette = gilt;
-      //Serial.println("palette: gilt");
-      break;
-    case 8:
-      targetPalette = tropicana;
-      //Serial.println("palette: tropicana");
-      break;
-    case 9:
-      targetPalette = borderrainbow;
-      //Serial.println("palette: borderrainbow");
-      break;
-    case 10:
-      targetPalette = redyell;
-      //Serial.println("palette: redyell");
-      break;
-    case 11:
-      targetPalette = RainbowColors_p;
-      //Serial.println("palette: RainbowColors");
-      break;
-    case 12:
-      targetPalette = RainbowStripeColors_p;
-      //Serial.println("palette: RainbowStripeColors");
-      break;
-    case 13:
-      targetPalette = CloudColors_p;
-      //Serial.println("palette: CloudColors_p");
-      break;
-    case 14:
-      targetPalette = PartyColors_p;
-      //Serial.println("palette: PartyColors");
-      break;
-    case 15:
-      targetPalette = LavaColors_p;
-      //Serial.println("palette: LavaColors");
-      break;
-    case 16:
-      targetPalette = OceanColors_p;
-      //Serial.println("palette: OceanColors");
-      break;
-    case 17:
-      targetPalette = ForestColors_p;
-      //Serial.println("palette: ForestColors");
-      break;
-    case 18:
-      targetPalette = HeatColors_p;
-      //Serial.println("palette: HeatColors");
-      break;
-    case 19:
-      targetPalette = Warm_Forest;
-      //Serial.println("palette: Warm_Forest");
-      break;
-    case 20:
-      targetPalette = Popsicle;
-      //Serial.println("palette: Popsicle");
-      break;
-    case 21:
-      targetPalette = Arizona_Trip;
-      //Serial.println("palette: Arizona_Trip");
-      break;
-
-  }
-  if (palnum == 0) {
-    currentPalette = targetPalette;
-  }
+*/
+    // blur rows same as columns, for irregular matrix
+    uint8_t keep = 255 - blur_amount;
+    uint8_t seep = blur_amount >> 1;
+    for( uint16_t row = 0; row < height; row++) {
+        CRGB carryover = CRGB::Black;
+        for( uint16_t i = 0; i < width; i++) {
+            CRGB cur = leds[XY(i,row)];
+            CRGB part = cur;
+            part.nscale8( seep);
+            cur.nscale8( keep);
+            cur += carryover;
+            if( i) leds[XY(i-1,row)] += part;
+            leds[XY(i,row)] = cur;
+            carryover = part;
+        }
+    }
 }
 
-/*
-  const TProgmemRGBGradientPalettePtr Palette_List[] = {
-  startup, purplecascade, blackwhite, newspaper, sunburst, gilt,
-  tropicana, borderrainbow, redyell, RainbowColors_p, RainbowStripeColors_p,
-  CloudColors_p,PartyColors_p,LavaColors_p, OceanColors_p,
-  ForestColors_p, HeatColors_p, Warm_Forest, Popsicle, Arizona_Trip};
+void blur(CRGB* leds, uint16_t height, uint16_t width, fract8 blur_amount) { //  leds[i]*=2; to multiply brightness
+  blurColumnsv3( leds, height, width, blur_amount);
+  blurRows1( leds, height, width, blur_amount * 0.89);         //.86 seems to work
+}
 
-  // Count of how many cpt-city gradients are defined:
-  const uint8_t gGradientPaletteCount = sizeof(Palette_List) / sizeof(TProgmemRGBGradientPalettePtr);
-*/
+extern uint8_t LEDcurbright;
+void LEDsetup(){
+  FastLED.setBrightness(LEDcurbright);
+  //FastLED.setMaxRefreshRate(125);
+  FastLED.addLeds<WS2813, LEDpin, GRB>(leds, 0, LEDtotal);
+  FastLED.clear(true);
+  LEDhalfstrips = max(1, LEDstrips/2);
+  LEDhalfper = max(1, LEDper/2);
+  Pattern_List[patternum].Pattern(true);
+}
 
 ////////////////////////// Colour Conversion //////////////////////////////////////////
 // uint16_t txtcolor = Color24toColor16(Wheel(map(letters[l], '0', 'Z', 255, 0)));
