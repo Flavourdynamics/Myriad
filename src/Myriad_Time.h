@@ -2,7 +2,7 @@
 #define Myriad_Time_h
 #include <Arduino.h>
 #include <time.h>
-#ifndef __INC_FASTSPI_LED2_H
+#ifndef FASTLED_VERSION
   #include <FastLED_Timers.h>
 #endif
 

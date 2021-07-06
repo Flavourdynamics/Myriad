@@ -15,7 +15,7 @@ void Myriad_Time::initialize(){
 }
 
 void Myriad_Time::gettime(){               
-  EVERY_N_SECONDS(3){      // gets the time from the internet
+  EVERY_N_SECONDS(60){      // gets the time from the internet
     getLocalTime(&tmstruct);
     Serial.println(&tmstruct, "%A, %B %d %Y %H:%M:%S");
     //Serial.printf("%d-%02d-%02d %02d:%02d:%02d",(tmstruct.tm_year)+1900,( tmstruct.tm_mon)+1, tmstruct.tm_mday,tmstruct.tm_hour, tmstruct.tm_min, tmstruct.tm_sec);
