@@ -14,14 +14,19 @@ class Myriad_Time {
   public:
     Myriad_Time();
   
-    uint8_t sleephour;
-    uint8_t sleepminute;
+    uint8_t sleepstarthour;
+    uint8_t sleepstartminute;
+    uint8_t sleependhour;
+    uint8_t sleependminute;
+    bool sleeping;
 
     struct tm tmstruct;
 
     void gettime();
 
     void initialize();
+
+    void sleepcheck();
 };
 
 #endif

@@ -1,5 +1,16 @@
 #ifndef Myriad_BT_h
 #define Myriad_BT_h
+//#include "Wire.h"
+#include <BluetoothSerial.h>
+
+BluetoothSerial Bluetooth;
+const byte BTnumchars = 20;
+char BTreceivedchars[BTnumchars];
+bool BTnewdata = false;
+char BTprimary[BTnumchars] = {0};
+int BTsecondary;
+char BTmessage[BTnumchars];
+uint8_t BTupcount;
 
 void BTreceive(){
   static boolean recvInProgress = false;
@@ -49,31 +60,18 @@ void BTparse() {
   }
 }
 
-
-
+void patcrossproc(int newpatnum);
 void BTselect(){               // or strcpy(STATEloopval, BLEprimary);
   Serial.print(BTprimary);
   Serial.print("-");
   Serial.println(BTsecondary);
   
   if (strcmp(BTprimary, "Power") == 0){
-    if(LEDamps > 0){
-      LEDamps = 0;
-    } else {
-      LEDamps = 3000;
-    }
-    FastLED.setMaxPowerInVoltsAndMilliamps(5, LEDamps);
-    FastLED.clear();
-    FastLED.show();
+    LEDonoff = !LEDonoff;
+    FastLED.clear(true);
   }
   else if (strcmp(BTprimary, "Brightness") == 0){
     LEDtargbright = BTsecondary;
-    //FastLED.setBrightness(LEDcurbright);
-    FastLED.show();
-  }
-  else if (strcmp(BTprimary, "Amps") == 0){
-    LEDamps = BTsecondary;
-    FastLED.setMaxPowerInVoltsAndMilliamps(5, LEDamps);
   }
   else if (strcmp(BTprimary, "Speed") == 0){
     STATEloopinterval = BTsecondary;
@@ -84,8 +82,11 @@ void BTselect(){               // or strcpy(STATEloopval, BLEprimary);
   else if (strcmp(BTprimary, "ShuffSpd") == 0){
     STATEshuffleinterval = BTsecondary;     // Time is sent in seconds
   }
-  else if (strcmp(BTprimary, "Shuffle") == 0){
+  else if (strcmp(BTprimary, "PatShuffleTog") == 0){
     patshuffle = !patshuffle;
+  }
+  else if (strcmp(BTprimary, "PalShuffleTog") == 0){
+    palshuff = !palshuff;
   }
   else if (strcmp(BTprimary, "Palette") == 0){
     palnum = BTsecondary;
@@ -99,7 +100,8 @@ void BTselect(){               // or strcpy(STATEloopval, BLEprimary);
 }
 
 void BTuplist(){         
-  String outdata = "";    
+  String outdata = "";
+  byte bipe; 
   /*
   outdata = outdata + "<bright," + LEDbright + ",amps," + LEDamps + ",speed," + STATEloopinterval + ",bpm," + beat + ",bpm," 
   + beat + ",shufint," + STATEshuffleinterval + ",palshuf," + STATEpalshuffleinterval + ",fps," + LEDS.getFPS() + ",pattern," + PATTERNnum + ">";
@@ -109,38 +111,43 @@ void BTuplist(){
       outdata = outdata + "<bright," + LEDcurbright + ">";
     break;
     case 1:
-      outdata = outdata + "<amps," + LEDamps + ">";
-    break;
-    case 2:
       outdata = outdata + "<speed," + STATEloopinterval + ">";
     break;
-    case 3:
+    case 2:
       outdata = outdata + "<bpm," + beat + ">";
     break;
-    case 4:
+    case 3:
       outdata = outdata + "<shufint," + STATEshuffleinterval + ">";
     break;
-    case 5:
-      outdata = outdata + "<palshuf," + STATEpalshuffleinterval + ">";
+    case 4:
+      outdata = outdata + "<palshuffint," + STATEpalshuffleinterval + ">";
     break;
-    case 6:
+    case 5:
       outdata = outdata + "<fps," + LEDS.getFPS() + ">";
     break;
-    case 7:
+    case 6:
       outdata = outdata + "<pattern," + patternum + ">";
+    break;
+    case 7:
+      bipe = palshuff;
+      outdata = outdata + "<palshuftog," + bipe + ">";
+    break;
+    case 8:
+      bipe = patshuffle;
+      outdata = outdata + "<patshuftog," + bipe + ">";
     break;
   }
   
   BTupcount++;
-  if(BTupcount > 7){
+  if(BTupcount > 8){
     BTupcount = 0;
   }
   Bluetooth.print(outdata);
 }
 
 void BTproc(){
-  EVERY_N_MILLIS_I(readloop, STATEreadinterval){
-    //if(Bluetooth.connected()){
+  EVERY_N_MILLIS(STATEreadinterval){
+    if(Bluetooth.connected()){
       BTreceive();
       if (BTnewdata == true) {          
         BTparse();
@@ -148,9 +155,8 @@ void BTproc(){
         BTnewdata = false;
       }
       BTuplist();
-    //}
+    }
   }
-  readloop.setPeriod(STATEreadinterval);
 }
 
 #endif

@@ -1,5 +1,5 @@
-#ifndef Lampert_Tools_h
-#define Lampert_Tools_h
+#ifndef Myriad_Tools_h
+#define Myriad_Tools_h
 // Includes lots of core functionality
 extern NamedPattern Pattern_List[];
 
@@ -76,15 +76,15 @@ extern const uint16_t NUMpatterns;
 extern uint8_t palnum;
 extern uint16_t patternselectID;
 extern uint16_t paletteselectID;
-#include "ESPUI.h"
-extern ESPUIClass ESPUI;
+//#include "ESPUI.h"
+//extern ESPUIClass ESPUI;
 void shuffler(){
   // Shuffle Pattern
   EVERY_N_SECONDS_I(shufloop, STATEshuffleinterval){
     if(patshuffle == true){
       patcrossproc(random8(NUMpatterns));     // Choose range that skips unwanted shuffles
     }
-    ESPUI.updateControlValue(patternselectID, String(patternum));   
+    //ESPUI.updateControlValue(patternselectID, String(patternum));   
   }
   shufloop.setPeriod(STATEshuffleinterval);
 
@@ -97,7 +97,7 @@ void shuffler(){
       Serial.print(palnum);
       Serial.print(" - ");
       Serial.println(Palette_List[palnum].Name);
-      ESPUI.updateControlValue(paletteselectID, String(palnum));
+      //ESPUI.updateControlValue(paletteselectID, String(palnum));
     }
     palshufloop.setPeriod(STATEpalshuffleinterval);
   }  // Update UI to display values stored in NVS
@@ -153,7 +153,7 @@ void patrunproc(bool newPL, byte fadeamt, int8_t hueinc, uint8_t huespeed, TProg
 }
 
 void fastruntasks(){
-  EVERY_N_MILLIS(3){
+  EVERY_N_MILLIS(10){
     brightnessfader();
     shuffler();
   }
@@ -168,7 +168,6 @@ void crossfader() {  ////////////////////////// Crossfader /////////////////////
       EVERY_N_MILLIS(20) {
         crossct += 1;           // higher increase faster xfade
       }
-      Serial.println(crossct);
       Pattern_List[oldpattern].Pattern(false);    // Run the old pattern and save to array, bool false = oldpat
       //for (uint16_t i = 0; i < LEDtotal; i++) {   // blend em
       //  leds2[i] = leds[i];   // Blend arrays of LEDs, third value is blend %
@@ -239,7 +238,7 @@ void blur(CRGB* leds, uint16_t height, uint16_t width, fract8 blur_amount) { // 
   blurColumnsv3( leds, height, width, blur_amount);
   blurRows1( leds, height, width, blur_amount * 0.89);         //.86 seems to work
 }
-
+/*
 extern uint8_t LEDcurbright;
 void LEDsetup(){
   FastLED.setBrightness(LEDcurbright);
@@ -249,7 +248,7 @@ void LEDsetup(){
   LEDhalfstrips = max(1, LEDstrips/2);
   LEDhalfper = max(1, LEDper/2);
   Pattern_List[patternum].Pattern(true);
-}
+}*/
 
 ////////////////////////// Colour Conversion //////////////////////////////////////////
 // uint16_t txtcolor = Color24toColor16(Wheel(map(letters[l], '0', 'Z', 255, 0)));

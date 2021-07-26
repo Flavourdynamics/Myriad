@@ -1,5 +1,5 @@
-#ifndef Lampert_Palettes_h
-#define Lampert_Palettes_h
+#ifndef Myriad_Palettes_h
+#define Myriad_Palettes_h
 /*
 RainbowColors_p;
 RainbowStripeColors_p;

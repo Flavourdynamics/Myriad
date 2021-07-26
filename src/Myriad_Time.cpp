@@ -4,8 +4,11 @@ Myriad_Time::Myriad_Time(){
   // Timeserver values
   timezone = -7; 
   daysavetime = 1;
-  sleephour;
-  sleepminute;
+  sleepstarthour;
+  sleepstartminute;
+  sleependhour;
+  sleependminute;
+  sleeping;
   struct tm tmstruct;
   initialize();
 }
@@ -20,6 +23,21 @@ void Myriad_Time::gettime(){
     Serial.println(&tmstruct, "%A, %B %d %Y %H:%M:%S");
     //Serial.printf("%d-%02d-%02d %02d:%02d:%02d",(tmstruct.tm_year)+1900,( tmstruct.tm_mon)+1, tmstruct.tm_mday,tmstruct.tm_hour, tmstruct.tm_min, tmstruct.tm_sec);
   }
+}
+
+void Myriad_Time::sleepcheck(){
+  /*
+  if sleephour
+  
+  start is higher than end, then add a day
+
+  else if start is lower than end, just simple compare
+
+  if(tmstruct.tm_hour && tmstruct.tm_min){
+    TimeSpan()
+  }
+  String(mtime.tmstruct.tm_hour) + ":" + String(mtime.tmstruct.tm_min)
+  */
 }
 
 /*
