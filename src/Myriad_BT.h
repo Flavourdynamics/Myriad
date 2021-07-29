@@ -7,7 +7,7 @@
 #ifndef FASTLED_VERSION
   #include <FastLED_Timers.h>
 #endif
-BluetoothSerial Bluetooth;
+//BluetoothSerial Bluetooth;
 void patcrossproc(int newpatnum);
 extern const String BTname;
 
@@ -21,10 +21,9 @@ class Myriad_BT{
     char BTmessage[BTnumchars];
     uint8_t BTupcount;
     uint16_t STATEreadinterval = 20;
-    BluetoothSerial Bluetooth;
-
+    
   public:////////////////////////////////////////////////////
-
+    BluetoothSerial Bluetooth;
     Myriad_BT();
     void receive();
     void parse();
