@@ -192,6 +192,16 @@ void Myriad_BT::uplist(){
   Bluetooth.print(outdata);
 }
 
+//extern NamedPalette Palette_List;
+extern uint16_t NUMpalettes;
+void Myriad_BT::sendpalettes(){
+  String outdata = "";
+  for(uint16_t x = 0; x < NUMpalettes; x++){
+    //outdata = outdata + Palette_List[x].Name;
+    Bluetooth.print("<" + outdata + ">");
+  }
+}
+
 void Myriad_BT::proc(){
   EVERY_N_MILLIS(STATEreadinterval){
     if(Bluetooth.connected()){

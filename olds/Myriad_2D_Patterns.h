@@ -280,6 +280,7 @@ void juggle() {
   }
 }
 */
+//Sinelon,Illusion,Diagonal,Rando,Scan,Confetti,Vortex,Tropic,Juggle,Flex,Firetoucher,Diamondmaw,Him,lilminfuk,Barbarism
 /////////////////////////////////////////////////////////////////////////////////////////////////
 NamedPattern Pattern_List[] = {
   {(pattern_func)Sinelon,       F("Sinelon")},

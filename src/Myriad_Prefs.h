@@ -3,10 +3,11 @@
 // Library for storing preferences between sessions
 #include <Preferences.h>
 #include <Arduino.h>
+#include <HardwareSerial.h>
 #ifndef FASTLED_VERSION
   #include <FastLED_Timers.h>
 #endif
-Preferences preferences; // Create preferences object
+ // Create preferences object
 
 extern uint8_t LEDtargbright;
 extern uint8_t patternum;
@@ -22,6 +23,7 @@ class Myriad_Prefs{
   private:
     void setup();
   public:
+    Preferences preferences;
     Myriad_Prefs();
     void update();
 };

@@ -12,13 +12,7 @@ HeatColors_p;
 */
 #define PALETTE_NAME(x) NamedPalette(x, #x)
 
-struct NamedPalette {
-  const TProgmemRGBGradientPalettePtr Palette;
-  const String Name;
 
-  NamedPalette(TProgmemRGBGradientPalettePtr p, const String n)
-    : Palette(p), Name(n) {}
-};
 
 DEFINE_GRADIENT_PALETTE( Border_Rainbow ){
     0,  0,  0,  0,
@@ -161,7 +155,7 @@ DEFINE_GRADIENT_PALETTE(Pastel){
   235,  167, 244, 255, //pale blue
   255,  50, 205, 255   //bluer teal
 };
-
+//Border_Rainbow,Warm_Forest,Popsicle,Arizona_Trip,Pit,Redyell,Startup,Tropicana,Gilt,Sunburst,Newspaper,Purple_Cascade,Blackwhite,RainbowStripeColors,RainbowColors,Pastel
 NamedPalette Palette_List[] = {
   PALETTE_NAME(Border_Rainbow),
   PALETTE_NAME(Warm_Forest),          // cool foresty teal                        

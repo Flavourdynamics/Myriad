@@ -1,5 +1,4 @@
 #include <Myriad_Prefs.h>
-#include <HardwareSerial.h>
 
 Myriad_Prefs::Myriad_Prefs(){
   this->setup();

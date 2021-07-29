@@ -20,8 +20,8 @@ void peroidictasks(){
     Serial.print("  ---  FPS: ");
     Serial.print(framerate);
     Serial.print("  ---  POWER: ");
-    Serial.println(calculate_unscaled_power_mW(leds, LEDtotal)/5);
-    //Prefs.update();
+    Serial.println(calculate_unscaled_power_mW(leds, LEDtotal)/5*LEDcurbright);
+    Prefs.update();
   }
 }
 
@@ -183,6 +183,34 @@ void fastruntasks(){
   }
 }
 
+#ifdef ESP32Virtual
+void crossfader() {  ////////////////////////// Crossfader //////////////////////////////////////////
+  EVERY_N_MILLIS_I(mainloop, STATEloopinterval){
+    if (crossct >= 255) { 
+      Pattern_List[patternum].Pattern(true);   // run completed pattern only when fading is complete
+    }
+    else if (crossct < 255) {
+      EVERY_N_MILLIS(20) {
+        crossct += 1;           // higher increase faster xfade
+      }
+      Pattern_List[oldpattern].Pattern(false);    // Run the old pattern and save to array, bool false = oldpat
+      //for (uint16_t i = 0; i < LEDtotal; i++) {   // blend em
+      //  leds2[i] = leds[i];   // Blend arrays of LEDs, third value is blend %
+      //}
+      memcpy8 (leds2, leds, LEDtotal); // __attribute__((noinline))
+      //leds2 = leds;
+  
+      Pattern_List[patternum].Pattern(true);   // Run the new pattern and save to array, bool true = newpat
+      for (uint16_t i = 0; i < LEDtotal; i++) {   // blend em
+        leds[i] = blend( leds2[i], leds[i], crossct);   // Blend arrays of LEDs, third value is blend %
+      }
+      //leds = blend( leds2, leds, crossct);
+    }
+    VIRTUALshow();
+  }
+  mainloop.setPeriod(STATEloopinterval);
+}
+#else
 void crossfader() {  ////////////////////////// Crossfader //////////////////////////////////////////
   EVERY_N_MILLIS_I(mainloop, STATEloopinterval){
     if (crossct >= 255) { 
@@ -210,33 +238,7 @@ void crossfader() {  ////////////////////////// Crossfader /////////////////////
   }
   mainloop.setPeriod(STATEloopinterval);
 }
-
-void crossfaderVIRTUAL() {  ////////////////////////// Crossfader //////////////////////////////////////////
-  EVERY_N_MILLIS_I(mainloop, STATEloopinterval){
-    if (crossct >= 255) { 
-      Pattern_List[patternum].Pattern(true);   // run completed pattern only when fading is complete
-    }
-    else if (crossct < 255) {
-      EVERY_N_MILLIS(20) {
-        crossct += 1;           // higher increase faster xfade
-      }
-      Pattern_List[oldpattern].Pattern(false);    // Run the old pattern and save to array, bool false = oldpat
-      //for (uint16_t i = 0; i < LEDtotal; i++) {   // blend em
-      //  leds2[i] = leds[i];   // Blend arrays of LEDs, third value is blend %
-      //}
-      memcpy8 (leds2, leds, LEDtotal); // __attribute__((noinline))
-      //leds2 = leds;
-  
-      Pattern_List[patternum].Pattern(true);   // Run the new pattern and save to array, bool true = newpat
-      for (uint16_t i = 0; i < LEDtotal; i++) {   // blend em
-        leds[i] = blend( leds2[i], leds[i], crossct);   // Blend arrays of LEDs, third value is blend %
-      }
-      //leds = blend( leds2, leds, crossct);
-    }
-  VIRTUALshow();
-  }
-  mainloop.setPeriod(STATEloopinterval);
-}
+#endif
 
 // blurColumns: perform a blur1d on each column of a rectangular matrix
 void blurColumnsv3(CRGB* leds, uint16_t height, uint16_t width, fract8 blur_amount) {
