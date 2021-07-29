@@ -182,5 +182,5 @@ NamedPalette Palette_List[] = {
 };
 
 // How many palettes are defined
-const int NUMpalettes = sizeof(Palette_List)/sizeof(Palette_List[0]);
+const uint16_t NUMpalettes = sizeof(Palette_List)/sizeof(Palette_List[0]);
 #endif

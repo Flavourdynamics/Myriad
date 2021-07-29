@@ -1,39 +1,30 @@
-#ifndef Myriad_Preferences_h
-#define Myriad_Preferences_h
-
-#include "Preferences.h"  // Library for storing preferences between sessions, functions below
+#ifndef Myriad_Prefs_h
+#define Myriad_Prefs_h
+// Library for storing preferences between sessions
+#include <Preferences.h>
+#include <Arduino.h>
+#ifndef FASTLED_VERSION
+  #include <FastLED_Timers.h>
+#endif
 Preferences preferences; // Create preferences object
 
-void preferences_setup(){
-  preferences.begin("my-app", false); // RW-mode (second parameter has to be false).
-  //preferences.clear();
-  //preferences.remove("counter"); // remove specific preference
-  LEDtargbright = preferences.getUInt("LEDtargbright", 15);
-  patternum = preferences.getUInt("patternum", 0);
-  palnum = preferences.getUInt("palettenum", 0);
-  STATEloopinterval = preferences.getUInt("loopint", 8);
-  STATEshuffleinterval = preferences.getUInt("shuffleint", 10);
-  STATEpalshuffleinterval = preferences.getUInt("palshuffleint", 10);
-  patshuffle = preferences.getBool("patshuffle", false);
-  palshuff = preferences.getBool("palshuff", false);
-  palmatch = preferences.getBool("palmatch", false);
-  //preferences.end();
-}
+extern uint8_t LEDtargbright;
+extern uint8_t patternum;
+extern uint8_t palnum;
+extern uint16_t STATEloopinterval;
+extern uint16_t STATEpatshuffleinterval;
+extern uint16_t STATEpalshuffleinterval;
+extern bool patshuffle;
+extern bool palshuff;
+extern bool palmatch;
 
-void preferences_update(){
-  EVERY_N_SECONDS(30){
-    //Serial.println("Updating preferences");
-    preferences.putUInt("LEDtargbright", LEDtargbright);
-    preferences.putUInt("patternum", patternum);
-    preferences.putUInt("palettenum", palnum);
-    preferences.putUInt("loopint", STATEloopinterval);
-    preferences.putUInt("shuffleint", STATEshuffleinterval);
-    preferences.putUInt("palshuffleint", STATEpalshuffleinterval);
-    preferences.putBool("patshuffle", patshuffle);
-    preferences.putBool("palshuff", palshuff);
-    preferences.putBool("palmatch", palmatch);
-  }
-}
+class Myriad_Prefs{ 
+  private:
+    void setup();
+  public:
+    Myriad_Prefs();
+    void update();
+};
 
 #endif
 /*

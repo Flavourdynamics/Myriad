@@ -87,7 +87,7 @@ uint8_t beat = 144;
 //State
 uint8_t STATEreadinterval = 20;
 uint8_t STATEloopinterval = 8;
-uint8_t STATEshuffleinterval = 10;
+uint8_t STATEpatshuffleinterval = 10;
 uint16_t STATEpalshuffleinterval = 10;
 
 //Pattern Key

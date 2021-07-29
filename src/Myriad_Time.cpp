@@ -1,4 +1,5 @@
-#include "Myriad_Time.h"
+#include <Myriad_Time.h>
+#include <time.h>
 
 Myriad_Time::Myriad_Time(){
   // Timeserver values
