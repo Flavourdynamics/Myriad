@@ -1,5 +1,6 @@
 #ifndef Myriad_BT_h
 #define Myriad_BT_h
+#include <Myriad_Types.h>
 // Throw BT.Bluetooth.begin("Name"); into setup
 // and then run BT.proc(); in loop
 #include <Arduino.h>
@@ -12,14 +13,17 @@ extern const String BTname;
 
 class Myriad_BT{
   private:////////////////////////////////////////////////////
-    #define BTnumchars 20
+    #define BTnumchars 500
     char BTreceivedchars[BTnumchars];
     bool BTnewdata = false;
-    char BTprimary[BTnumchars] = {0};
+    char BTprimary[BTnumchars];
     int BTsecondary;
     char BTmessage[BTnumchars];
+    bool BTappneedslists = false;;
+    char startMarker = '<';
+    char endMarker = '>';
     uint8_t BTupcount;
-    uint16_t STATEreadinterval = 20;
+    uint16_t STATEBTinterval = 20;
     
   public:////////////////////////////////////////////////////
     BluetoothSerial Bluetooth;
@@ -28,6 +32,7 @@ class Myriad_BT{
     void parse();
     void select();
     void sendpalettes();
+    void sendpatterns();
     void uplist();
     void proc();
 };

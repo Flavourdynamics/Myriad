@@ -1,5 +1,6 @@
 #ifndef Myriad_Palettes_h
 #define Myriad_Palettes_h
+#include <Myriad_Types.h>
 /*
 RainbowColors_p;
 RainbowStripeColors_p;
@@ -11,8 +12,6 @@ ForestColors_p;
 HeatColors_p;
 */
 #define PALETTE_NAME(x) NamedPalette(x, #x)
-
-
 
 DEFINE_GRADIENT_PALETTE( Border_Rainbow ){
     0,  0,  0,  0,

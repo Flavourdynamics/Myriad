@@ -6,9 +6,7 @@ Myriad_BT::Myriad_BT(){
 
 void Myriad_BT::receive(){
   static bool recvInProgress = false;
-  static uint8_t ndx = 0;
-  char startMarker = '<';
-  char endMarker = '>';
+  static uint16_t ndx = 0;
   char recievedchar;
 
   while (Bluetooth.available() > 0 && BTnewdata == false) {
@@ -101,6 +99,7 @@ void Myriad_BT::select(){             // or strcpy(STATEloopval, BLEprimary);
   else if (strcmp(BTprimary, "Pattern") == 0){
     patcrossproc(BTsecondary);
   }
+  BTnewdata = false;
 }
 #else
 void Myriad_BT::select(){             // or strcpy(STATEloopval, BLEprimary);
@@ -140,6 +139,10 @@ void Myriad_BT::select(){             // or strcpy(STATEloopval, BLEprimary);
   else if (strcmp(BTprimary, "Pattern") == 0){
     patcrossproc(BTsecondary);
   }
+  else if (strcmp(BTprimary, "Listme") == 0){
+    BTappneedslists = true;
+  }
+  BTnewdata = false;
 }
 #endif
 
@@ -173,7 +176,7 @@ void Myriad_BT::uplist(){
       outdata = outdata + "<fps," + framerate + ">";
     break;
     case 6:
-      outdata = outdata + "<pattern," + patternum + ">";
+      outdata = outdata + "<pattern," + Pattern_List[patternum].Name + ">";
     break;
     case 7:
       bipe = palshuff;
@@ -192,26 +195,38 @@ void Myriad_BT::uplist(){
   Bluetooth.print(outdata);
 }
 
-//extern NamedPalette Palette_List;
-extern uint16_t NUMpalettes;
+void Myriad_BT::sendpatterns(){
+  String outdata = "";
+  for(uint16_t x = 0; x < NUMpalettes; x++){
+    outdata = outdata + Pattern_List[x].Name + "#";
+  }
+  Bluetooth.print("<patternlist," + outdata + ">");
+  Serial.println("sending pat list");
+}
+
 void Myriad_BT::sendpalettes(){
   String outdata = "";
   for(uint16_t x = 0; x < NUMpalettes; x++){
-    //outdata = outdata + Palette_List[x].Name;
-    Bluetooth.print("<" + outdata + ">");
+    outdata = outdata + Palette_List[x].Name + "#";
   }
+  Bluetooth.print("<palettelist," + outdata + ">");
+  Serial.println("sending pal list");
 }
 
 void Myriad_BT::proc(){
-  EVERY_N_MILLIS(STATEreadinterval){
-    if(Bluetooth.connected()){
-      this->receive();
-      if (BTnewdata == true) {          
-        this->parse();
-        this->select(); 
-        BTnewdata = false;
+  EVERY_N_MILLIS(STATEBTinterval){
+    if(Bluetooth.connected()){    // Only run this if connection established
+      this->receive();            // Get data
+      if(BTappneedslists == true){    // If the app does not have the pattern list
+        this->sendpatterns();     // Send the pattern list
+        this->sendpalettes();
+        BTappneedslists = false;
       }
-      this->uplist();
+      if (BTnewdata == true) {    // If there is new data available
+        this->parse();            // Get data and validate it
+        this->select();           // Process valid data
+      }
+      this->uplist();             // Spam the app with status updates
     }
   }
 }

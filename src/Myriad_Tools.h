@@ -1,9 +1,10 @@
 #ifndef Myriad_Tools_h
 #define Myriad_Tools_h
 #include <FastLED.h>
+#include <Myriad_Types.h>
 // Includes lots of core functionality
 extern NamedPattern Pattern_List[];
-//typedef void (*SimplePatternList[])();
+extern NamedPalette Palette_List[];
 
 void peroidictasks(){
   EVERY_N_MILLIS(500){
@@ -78,15 +79,12 @@ extern const uint16_t NUMpatterns;
 extern uint8_t palnum;
 extern uint16_t patternselectID;
 extern uint16_t paletteselectID;
-//#include "ESPUI.h"
-//extern ESPUIClass ESPUI;
 void shuffler(){
   // Shuffle Pattern
   EVERY_N_SECONDS_I(shufloop, STATEpatshuffleinterval){
     if(patshuffle == true){
       patcrossproc(random8(NUMpatterns));     // Choose range that skips unwanted shuffles
     }
-    //ESPUI.updateControlValue(patternselectID, String(patternum));   
   }
   shufloop.setPeriod(STATEpatshuffleinterval);
 
@@ -99,10 +97,9 @@ void shuffler(){
       Serial.print(palnum);
       Serial.print(" - ");
       Serial.println(Palette_List[palnum].Name);
-      //ESPUI.updateControlValue(paletteselectID, String(palnum));
     }
     palshufloop.setPeriod(STATEpalshuffleinterval);
-  }  // Update UI to display values stored in NVS
+  }
 }
 
 void blackout() {

@@ -1,6 +1,6 @@
 #ifndef Myriad_2D_Patterns_h
 #define Myriad_2D_Patterns_h
-// See steps to add patterns in Testbed.h
+#include <Myriad_Types.h>
 /*
 void NewPattern(bool newPL){
   //patrunproc(bool newPL, byte fadeamt, int8_t hueinc, uint8_t huespeed, TProgmemRGBGradientPalettePtr matchpal)
