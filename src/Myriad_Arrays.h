@@ -1,5 +1,6 @@
 #ifndef Myriad_Arrays_h
 #define Myriad_Arrays_h
+#include <Arduino.h>
 // This file contains static arrays for printing to the display
 
 const uint8_t PROGMEM startarray[] = {
@@ -124,7 +125,7 @@ const uint8_t PROGMEM startarray[] = {
   3, 0, 0, 4, 4, 0, 0, 5, 5, 0, 0, 6, 0, 6, 6, 0, 6, 0, 0, 5, 5, 0, 0, 4, 4, 0, 0, 3, 
   0, 0, 4, 4, 0, 0, 5, 5, 0, 0, 6, 6, 0, 0, 0, 0, 6, 6, 0, 0, 5, 5, 0, 0, 4, 4, 0, 0};
 
-const byte PROGMEM canadaray[] = {
+const uint8_t PROGMEM canadaray[] = {
   1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
   1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
   1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,

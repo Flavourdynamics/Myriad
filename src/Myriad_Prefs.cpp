@@ -1,11 +1,11 @@
 #include <Myriad_Prefs.h>
 
 Myriad_Prefs::Myriad_Prefs(){
-  this->setup();
+  //this->setup();
 }
 
 void Myriad_Prefs::setup(){
-  preferences.begin("my-app", false); // RW-mode (second parameter has to be false).
+  //preferences.begin("Myriad", false); // RW-mode (second parameter has to be false).
   //preferences.clear();
   //preferences.remove("counter"); // remove specific preference
   LEDtargbright = preferences.getUInt("LEDtargbright", 15);

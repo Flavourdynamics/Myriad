@@ -10,7 +10,7 @@ struct NamedPalette {
 };
 
 typedef void (*SimplePatternList[])();
-using pattern_func = void (*)(bool newpatbool);
+using pattern_func = void (*)(bool newpatbool, CRGB *dest);
 typedef struct {
   pattern_func Pattern;
   const String Name;

@@ -21,7 +21,7 @@ void peroidictasks(){
     Serial.print("  ---  FPS: ");
     Serial.print(framerate);
     Serial.print("  ---  POWER: ");
-    Serial.println(calculate_unscaled_power_mW(leds, LEDtotal)/5*LEDcurbright);
+    Serial.println(calculate_unscaled_power_mW(writedata, LEDtotal)/5*LEDcurbright);
     Prefs.update();
   }
 }
@@ -44,26 +44,30 @@ void huepusher(bool newPL, int8_t hueinc,  uint8_t huespeed) {
   }
 }
 
-void fader(bool newPL, byte fadeval) {
+void fader(bool newPL, byte fadeval) {  // fades led array by given amount
   if (newPL == true){
-    targfade = fadeval;
-    fadeToBlackBy( leds, LEDtotal, currfade);
+    fadeToBlackBy( firstbuffer, LEDtotal, fadeval);    // fade first array if pattern is new
+  } else if (newPL == false){
+    fadeToBlackBy( secondbuffer, LEDtotal, fadeval);   // fade second array if pattern is old
   }
-  if (currfade > targfade) {              // can change this to make it blend down instead of just up
-    currfade = targfade;
-  }
-  else if (currfade < targfade) {
-    currfade++;
+}
+
+void blackout(CRGB *targetarray) {
+  for ( int i = 0; i < LEDtotal; i++) {
+    targetarray[i] = CRGB(0, 0, 0);
   }
 }
 
 void patcrossproc(int newpatnum){         // Every time you switch patterns run this to begin crossfading
-  crossct = 0;    // reset the blend amount
+  blackout(secondbuffer);                           //purge the old buffer
+  memcpy8 (secondbuffer, firstbuffer, LEDtotal);    // copy data from first buffer to second, for continuity
+  blackout(firstbuffer);                            // wipe the new buffer for incoming pattern
+  crossct = 0;                  // reset the blend amount
   oldpattern = patternum;       // set the current pattern to be the old one so we can make it use the same variables
   patternum = newpatnum;        // save input to current pattern
   rowcount[0] = rowcount[1];    // copy row status to default rows, and reset them for the new pattern
   rowcount[1] = 0;
-  colcount[0] = colcount[1];
+  colcount[0] = colcount[1];    // new pattern is 1, because it is TRUE with newPL
   colcount[1] = 0;
   count[0] = count[1];
   count[1] = 0;
@@ -99,13 +103,6 @@ void shuffler(){
       Serial.println(Palette_List[palnum].Name);
     }
     palshufloop.setPeriod(STATEpalshuffleinterval);
-  }
-}
-
-void blackout() {
-  for ( int i = 0; i < LEDtotal; i++) {
-    leds[i] = CRGB(0, 0, 0);
-    //leds2[i] = CRGB(0,0,0);
   }
 }
 
@@ -184,6 +181,27 @@ void fastruntasks(){
 void crossfader() {  ////////////////////////// Crossfader //////////////////////////////////////////
   EVERY_N_MILLIS_I(mainloop, STATEloopinterval){
     if (crossct >= 255) { 
+      Pattern_List[patternum].Pattern(true, firstbuffer);   // run only newest pattern if crossfading complete
+    }
+    else if (crossct < 255) {
+      EVERY_N_MILLIS(20) {
+        crossct += 1;           // higher increase faster xfade
+      }
+      Pattern_List[patternum].Pattern(true, firstbuffer);   // Run the newest pattern and save to array, bool true = newpat
+      Pattern_List[oldpattern].Pattern(false, secondbuffer);    // Run the old pattern and save to array, bool false = oldpat
+      //memcpy8 (leds2, leds, LEDtotal); // __attribute__((noinline))
+    }
+    for (uint16_t i = 0; i < LEDtotal; i++) {   // blend em
+      writedata[i] = blend( secondbuffer[i], firstbuffer[i], crossct);   // Blend arrays of LEDs, third value is blend %
+    }
+    VIRTUALshow();
+  }
+  mainloop.setPeriod(STATEloopinterval);
+}
+/*
+void crossfader() {  ////////////////////////// Crossfader //////////////////////////////////////////
+  EVERY_N_MILLIS_I(mainloop, STATEloopinterval){
+    if (crossct >= 255) { 
       Pattern_List[patternum].Pattern(true);   // run completed pattern only when fading is complete
     }
     else if (crossct < 255) {
@@ -191,22 +209,17 @@ void crossfader() {  ////////////////////////// Crossfader /////////////////////
         crossct += 1;           // higher increase faster xfade
       }
       Pattern_List[oldpattern].Pattern(false);    // Run the old pattern and save to array, bool false = oldpat
-      //for (uint16_t i = 0; i < LEDtotal; i++) {   // blend em
-      //  leds2[i] = leds[i];   // Blend arrays of LEDs, third value is blend %
-      //}
-      memcpy8 (leds2, leds, LEDtotal); // __attribute__((noinline))
-      //leds2 = leds;
-  
+      //memcpy8 (leds2, leds, LEDtotal); // __attribute__((noinline))
+      leds2 = leds;
       Pattern_List[patternum].Pattern(true);   // Run the new pattern and save to array, bool true = newpat
       for (uint16_t i = 0; i < LEDtotal; i++) {   // blend em
-        leds[i] = blend( leds2[i], leds[i], crossct);   // Blend arrays of LEDs, third value is blend %
+        leds3[i] = blend( leds[i], leds2[i], crossct);   // Blend arrays of LEDs, third value is blend %
       }
-      //leds = blend( leds2, leds, crossct);
     }
     VIRTUALshow();
   }
   mainloop.setPeriod(STATEloopinterval);
-}
+}*/
 #else
 void crossfader() {  ////////////////////////// Crossfader //////////////////////////////////////////
   EVERY_N_MILLIS_I(mainloop, STATEloopinterval){
@@ -221,14 +234,13 @@ void crossfader() {  ////////////////////////// Crossfader /////////////////////
       //for (uint16_t i = 0; i < LEDtotal; i++) {   // blend em
       //  leds2[i] = leds[i];   // Blend arrays of LEDs, third value is blend %
       //}
-      memcpy8 (leds2, leds, LEDtotal); // __attribute__((noinline))
-      //leds2 = leds;
+      //memcpy8 (leds2, leds, LEDtotal); // __attribute__((noinline))
+      leds2 = leds;
   
       Pattern_List[patternum].Pattern(true);   // Run the new pattern and save to array, bool true = newpat
       for (uint16_t i = 0; i < LEDtotal; i++) {   // blend em
         leds[i] = blend( leds2[i], leds[i], crossct);   // Blend arrays of LEDs, third value is blend %
       }
-      //leds = blend( leds2, leds, crossct);
     }
   FastLED.show();
   framerate = FastLED.getFPS();

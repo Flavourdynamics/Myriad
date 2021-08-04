@@ -194,14 +194,16 @@ void Myriad_BT::uplist(){
   }
   Bluetooth.print(outdata);
 }
-
+extern const uint16_t NUMpatterns;
 void Myriad_BT::sendpatterns(){
   String outdata = "";
-  for(uint16_t x = 0; x < NUMpalettes; x++){
+  for(uint16_t x = 0; x < NUMpatterns; x++){
     outdata = outdata + Pattern_List[x].Name + "#";
   }
   Bluetooth.print("<patternlist," + outdata + ">");
-  Serial.println("sending pat list");
+  EVERY_N_SECONDS(1){
+    Serial.println("Sending pat list");
+  }
 }
 
 void Myriad_BT::sendpalettes(){
@@ -210,7 +212,9 @@ void Myriad_BT::sendpalettes(){
     outdata = outdata + Palette_List[x].Name + "#";
   }
   Bluetooth.print("<palettelist," + outdata + ">");
-  Serial.println("sending pal list");
+  EVERY_N_SECONDS(1){
+    Serial.println("Sending pal list");
+  }
 }
 
 void Myriad_BT::proc(){

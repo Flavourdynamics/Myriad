@@ -7,7 +7,6 @@
 #ifndef FASTLED_VERSION
   #include <FastLED_Timers.h>
 #endif
- // Create preferences object
 
 extern uint8_t LEDtargbright;
 extern uint8_t patternum;
@@ -20,12 +19,11 @@ extern bool palshuff;
 extern bool palmatch;
 
 class Myriad_Prefs{ 
-  private:
-    void setup();
   public:
-    Preferences preferences;
     Myriad_Prefs();
+    void setup();
     void update();
+    Preferences preferences;
 };
 
 #endif
