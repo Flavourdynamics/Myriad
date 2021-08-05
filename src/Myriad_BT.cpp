@@ -128,9 +128,14 @@ void Myriad_BT::select(){             // or strcpy(STATEloopval, BLEprimary);
     patshuffle = !patshuffle;
   }
   else if (strcmp(BTprimary, "PalShuffleTog") == 0){
+    palmatch = false;
     palshuff = !palshuff;
   }
+  else if (strcmp(BTprimary, "PalMatch") == 0){
+    palmatch = !palmatch;
+  }
   else if (strcmp(BTprimary, "Palette") == 0){
+    palmatch = false;
     palnum = BTsecondary;
   }
   else if (strcmp(BTprimary, "BPM") == 0){
@@ -179,17 +184,21 @@ void Myriad_BT::uplist(){
       outdata = outdata + "<pattern," + Pattern_List[patternum].Name + ">";
     break;
     case 7:
+      bipe = patshuffle;
+      outdata = outdata + "<patshuftog," + bipe + ">";
+    break;
+    case 8:
       bipe = palshuff;
       outdata = outdata + "<palshuftog," + bipe + ">";
     break;
-    case 8:
-      bipe = patshuffle;
-      outdata = outdata + "<patshuftog," + bipe + ">";
+    case 9:
+      bipe = palmatch;
+      outdata = outdata + "<palmatch," + bipe + ">";
     break;
   }
   
   BTupcount++;
-  if(BTupcount > 8){
+  if(BTupcount > 9){
     BTupcount = 0;
   }
   Bluetooth.print(outdata);

@@ -28,7 +28,7 @@ void Rando(bool newPL, CRGB *dest){
 }
  
 void Illusion(bool newPL, CRGB *dest){
-  patrunproc(newPL, 255, 1, 16, Blackwhite);
+  patrunproc(newPL, deffade, 1, 16, Blackwhite);
   for (int y = 0; y < LEDhalfper; y++){
     for (int x = 0; x < LEDhalfstrips; x++){
       dest[XY(x, y)] = ColorFromPalette(currentPalette, hue[newPL] + x*25 + y*25, 255, LINEARBLEND);                      //top left
@@ -158,9 +158,10 @@ void dacirc(bool newPL, CRGB *dest){
     noise[bead][1] = inoise8(noise[bead][1], timer[newPL]*2+random8()+bead); 
     noise[bead][1] = constrain(noise[bead][1], 60, 195); 
     uint16_t ypos = map(noise[bead][1], 60, 195, 0, LEDper);
-    
-    //ledmatrix4.DrawFilledCircle(xpos, ypos, 2, ColorFromPalette(currentPalette, hue[newPL] + bead*1, 255*bead, LINEARBLEND));
+
+    ledmatrix.DrawFilledCircle(xpos, ypos, 2, ColorFromPalette(currentPalette, hue[newPL] + bead*1, 255*bead, LINEARBLEND));
   }
+  memcpy8 (dest, LEDmatrixCRGB, LEDtotal*3);
   timer[newPL]+=1;
 }
 
@@ -284,6 +285,161 @@ void Quadplexor(bool newPL, CRGB *dest){
     }
   }
 }
+///////////////////////////// to be converted from Ultramagnet ////////////////////////////////
+/*
+void visualizer(){
+  palettetargeting(11);
+  uint8_t z = fetcher(1);
+  
+  blackout();
+  for(int band = 0; band < EQbins; band++){
+    for(int leng = 0; leng < EQscaled[band]; leng++){ // Display as 00 11 22 33 44 55 66 66 55 44 33 22 11 00  CHSV(hue+leng*5-s*7, 255, 255); EQscaled[band]
+      uint8_t ahue = hue[z] +leng*5 +band*5;
+      leds[XY(LEDstrips/2+band, leng)] = ColorFromPalette(currentPalette, ahue, 255, LINEARBLEND);
+      leds[XY(LEDstrips/2-1-band, leng)] = ColorFromPalette(currentPalette, ahue, 255, LINEARBLEND);
+    }
+  }
+  huepusher(1, z, 16);
+}
+
+void waterfall(){
+  palettetargeting(13);
+  uint8_t z = fetcher(2);
+  
+  for (int row = 0; row < rowcount[z]; row++){
+    for (int col = 0; col < LEDstrips; col++){         // Write each row with start colour and a random saturation      
+      leds[XY(col, row)] = ColorFromPalette(currentPalette, hue[z] + row*15+sin8((row*7 + col*10+count[z]*2))*(1+row)/80, 255, LINEARBLEND);          // This monster determines how much the wave twists, sin8 function is for base twist, and stuff to the left is for how much twist per row 
+    }          
+  }
+  huepusher(-5, z, 8); //huepush(uint8_t hueinc, uint8_t zvalue, uint8_t timer)
+
+  EVERY_N_MILLIS(100){
+    if(rowcount[z] < LEDper){
+      rowcount[z]++;
+    }  
+   count[z]++; 
+  }
+}
+
+void initialization(){
+  //fader(deffade);
+  palettetargeting(2);
+  uint8_t z = fetcher(0);
+  byte horzgradient = 0;
+  byte centerpoint = (LEDstrips-1)/2;
+  
+  for(int y = 0; y < LEDper; y++){            //read original values from array and add hue mod
+    for(int x = 0; x < LEDstrips; x++){
+      //byte arrayval = pgm_read_byte_near(&startarray[y*LEDstrips+x]);
+      //uint8_t hueindex = arrayval * 52 + hue[z] -(abs(centerpoint +0.5 -x) * horzgradient);
+      //leds[XY(x, y)] = ColorFromPalette( currentPalette, hueindex, 255 * arrayval, LINEARBLEND); // dont show 0s
+      //leds[XY(x, y)] = ColorFromPalette( currentPalette, pgm_read_byte_near(&startarray[y*LEDstrips+x])* 52 + hue[z] -(abs(centerpoint +0.5 -x) * horzgradient), 255 * pgm_read_byte_near(&startarray[y*LEDstrips+x]), LINEARBLEND);
+      
+      if(pgm_read_byte_near(&startarray[y*LEDstrips+x]) == 2){            //red
+        leds[XY(x, y)] = ColorFromPalette( currentPalette, 0 + hue[z] - abs(centerpoint +0.5 -x) * horzgradient, 255, LINEARBLEND);                                     
+      } else if(pgm_read_byte_near(&startarray[y*LEDstrips+x]) == 3){      //yellow
+        leds[XY(x, y)] = ColorFromPalette( currentPalette, 52 + hue[z] - abs(centerpoint +0.5 -x) * horzgradient, 255, LINEARBLEND);
+      } else if(pgm_read_byte_near(&startarray[y*LEDstrips+x]) == 4){     //green
+        leds[XY(x, y)] = ColorFromPalette( currentPalette, 103 + hue[z] - abs(centerpoint +0.5 -x) * horzgradient, 255, LINEARBLEND);
+      } else if(pgm_read_byte_near(&startarray[y*LEDstrips+x]) == 5){     //cyan
+        leds[XY(x, y)] = ColorFromPalette( currentPalette, 154 + hue[z] - abs(centerpoint +0.5 -x) * horzgradient, 255, LINEARBLEND);
+      } else if(pgm_read_byte_near(&startarray[y*LEDstrips+x]) == 6){     //blue
+        leds[XY(x, y)] = ColorFromPalette( currentPalette, 206 + hue[z] - abs(centerpoint +0.5 -x) * horzgradient, 255, LINEARBLEND);
+      } else if(pgm_read_byte_near(&startarray[y*LEDstrips+x]) == 1){     //white
+        leds[XY(x, y)] = CHSV(255, 0, 255);
+      } else {                                //black
+        leds[XY(x, y)] = CHSV(0, 0, 0);
+      }
+      
+    }
+  }
+  huepusher(1, z, 16);
+}
+void sinesides(){
+  palettetargeting(8);
+  CRGBPalette16 palette1 = gilt;
+  CRGBPalette16 palette2 = currentPalette;
+  uint8_t z = fetcher(19); 
+
+  for(int y = 0; y < LEDper; y++){ 
+    uint8_t pos = sin8(y*3+hue[z]*3) ;                                               // find wavelength, then have it repeatt several times at a less intense wavelength             uint8_t pos = sin8(hue%25*(y%25))  // or sin8(hue*y/5+y%5*256/5
+    byte wavestart = beatsin8(6, 0, 5);
+    pos = map(pos, 0, 255, wavestart, LEDstrips-1-wavestart);
+    leds[XY(pos, y)] += CHSV(255, 0, beatsin8(8, 0, 255)+y*2);
+    
+    for( int i = 0; i < pos; i++){     
+      leds[XY(i, y)] = ColorFromPalette(palette1, hue[z] + y*7, 255, LINEARBLEND);
+    }
+    for( int i = LEDstrips -1; i > pos; i--){
+      leds[XY(i, y)] = ColorFromPalette(palette2, 128 - hue[z] + y*7, 255, LINEARBLEND);
+    }
+  }
+  huepusher(1, z, 16);
+}
+
+void staticeye(){
+  palettetargeting(5);
+  uint8_t z = fetcher(20); 
+  
+  for (int col = 0; col < LEDstrips/2; col++){         // Write each row with start colour and a random saturation    
+    for(int row = 0; row <LEDper/2; row++){
+      
+      int standin = beatsin8(20, -1, 1);      // Mess with this to create eye layers and adjust how long it stays at 0, which is the static
+      leds[XY(col, row)] = ColorFromPalette(currentPalette, hue[z] + (col*standin*row+row), 255, LINEARBLEND);      // Target palette, start hue
+      leds[XY(col, LEDper - 1 - row)] = ColorFromPalette(currentPalette, hue[z] + (col*standin*row+row), 255, LINEARBLEND);
+      leds[XY(LEDstrips - 1 - col, row)] = ColorFromPalette(currentPalette, hue[z] + (col*standin*row+row), 255, LINEARBLEND);
+      leds[XY(LEDstrips - 1 - col, LEDper - 1 - row)] = ColorFromPalette(currentPalette, hue[z] + (col*standin*row+row), 255, LINEARBLEND);
+    }
+  }  
+  huepusher(-1, z, 16);
+}
+
+void canada(){
+  for(int y = 0; y < LEDper; y++){            //read original values from array and add hue mod
+    for(int x = 0; x < LEDstrips; x++){
+      if(pgm_read_byte_near(&canadaray[y*LEDstrips+x]) == 0){            //white
+        leds[XY(x, y)] = CRGB(255, 255, 255);
+      } 
+      else if(pgm_read_byte_near(&canadaray[y*LEDstrips+x]) == 1){      //red
+        leds[XY(x, y)] = CRGB(255, 0, 0);
+      } 
+      else if(pgm_read_byte_near(&canadaray[y*LEDstrips+x]) == 2){     //pink       just set to red for now
+        leds[XY(x, y)] = CRGB(255, 0, 0);
+      } 
+    }
+  }
+}
+
+void textdisp(){
+  uint8_t z = fetcher(22);
+  blackout();
+  
+  matrix->setTextWrap(false);
+  //matrix->setFont( &Roboto_Mono_Medium_24 ); // matrix->setTextSize(size); for defaults
+  matrix->setRotation(0);  //change to 1
+  matrix->setTextColor(timer);
+  matrix->setTextSize(2);
+  strcpy(BTmessage, "WONGLE"); 
+  byte strlength = strlen(BTmessage);
+  byte fontwidth = 10;
+  byte fontheight = 16;
+  byte cursorx = LEDstrips/2-fontwidth/2;
+  
+  for(int i = 0; i < strlength; i++){
+    uint16_t txtcolor = Color24toColor16(Wheel(hue[z]+i*35));
+    matrix->setTextColor(txtcolor); //matrix->Color(255,0,255)
+    matrix->setCursor(cursorx, count[z]+i*fontheight);
+    matrix->print(BTmessage[i]);
+  }
+  //matrix->show();
+  EVERY_N_MILLIS(16){
+    count[z]--;
+    if( count[z] == min(-LEDper, -fontheight*strlength)){
+      count[z] = LEDper+fontheight;
+    }
+  }
+}
+*/ ///////////////////////////////////////////////////////////////
 /*
 void Rainbow() {
   palettetargeting(1);
