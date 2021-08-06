@@ -64,7 +64,7 @@ void peroidictasks();
 void fastruntasks();
 void shuffler();
 void palettetargeting(TProgmemRGBGradientPalettePtr matchpal);
-void patcrossproc(int newpatnum);
+void patchangeproc(int newpatnum);
 void patrunproc(bool newPL, byte fadeamt, int8_t hueinc, uint8_t huespeed, TProgmemRGBGradientPalettePtr procpal);
 void crossfader();
 

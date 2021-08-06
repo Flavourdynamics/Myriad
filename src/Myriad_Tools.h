@@ -58,7 +58,7 @@ void blackout(CRGB *targetarray) {
   }
 }
 
-void patcrossproc(int newpatnum){         // Every time you switch patterns run this to begin crossfading
+void patchangeproc(int newpatnum){         // Every time you switch patterns run this to begin crossfading
   blackout(secondbuffer);                           //purge the old buffer
   memcpy8 (secondbuffer, firstbuffer, LEDtotal);    // copy data from first buffer to second, for continuity
   blackout(firstbuffer);                            // wipe the new buffer for incoming pattern
@@ -69,6 +69,10 @@ void patcrossproc(int newpatnum){         // Every time you switch patterns run 
   rowcount[1] = 0;
   colcount[0] = colcount[1];    // new pattern is 1, because it is TRUE with newPL
   colcount[1] = 0;
+  uint8_t noisesize = sizeof(noise[0]);
+  //for (uint16_t i = 0; i < numnoise; i++){
+    memcpy(noise[0], noise[1], noisesize);
+  //}
   count[0] = count[1];
   count[1] = 0;
   hue[0] = hue[1];
@@ -87,7 +91,7 @@ void shuffler(){
   // Shuffle Pattern
   EVERY_N_SECONDS_I(shufloop, STATEpatshuffleinterval){
     if(patshuffle == true){
-      patcrossproc(random8(NUMpatterns));     // Choose range that skips unwanted shuffles
+      patchangeproc(random8(NUMpatterns));     // Choose range that skips unwanted shuffles
     }
   }
   shufloop.setPeriod(STATEpatshuffleinterval);
@@ -180,6 +184,7 @@ void fastruntasks(){
 #ifdef ESP32Virtual
 void crossfader() {  ////////////////////////// Crossfader //////////////////////////////////////////
   EVERY_N_MILLIS_I(mainloop, STATEloopinterval){
+    uint32_t starttime = ESP.getCycleCount();
     if (crossct >= 255) { 
       Pattern_List[patternum].Pattern(true, firstbuffer);   // run only newest pattern if crossfading complete
     }
@@ -195,6 +200,7 @@ void crossfader() {  ////////////////////////// Crossfader /////////////////////
       writedata[i] = blend( secondbuffer[i], firstbuffer[i], crossct);   // Blend arrays of LEDs, third value is blend %
     }
     VIRTUALshow();
+    framerate = 240000000/(ESP.getCycleCount()-starttime); //millis;//(starttime-millis()); //moving average framerate
   }
   mainloop.setPeriod(STATEloopinterval);
 }

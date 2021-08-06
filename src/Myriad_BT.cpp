@@ -44,13 +44,15 @@ void Myriad_BT::parse() {
   if(strcmp(BTprimary, "X") == 0){           
     strtokIndx = strtok(NULL, ",");           // this continues where the previous call left off
     strcpy(BTmessage, strtokIndx);           // get a text string if app is sending text
+    Serial.print("String received: ");
+    Serial.println(BTmessage);
   } else {
     strtokIndx = strtok(NULL, ",");             
     BTsecondary = atoi(strtokIndx);          // convert this part to an integer
   }
 }
 
-void patcrossproc(int newpatnum);
+void patchangeproc(int newpatnum);
 extern bool LEDonoff;
 extern uint8_t LEDtargbright;
 extern uint16_t STATEloopinterval;
@@ -133,6 +135,7 @@ void Myriad_BT::select(){             // or strcpy(STATEloopval, BLEprimary);
   }
   else if (strcmp(BTprimary, "PalMatch") == 0){
     palmatch = !palmatch;
+    palshuff = false;
   }
   else if (strcmp(BTprimary, "Palette") == 0){
     palmatch = false;
@@ -142,7 +145,8 @@ void Myriad_BT::select(){             // or strcpy(STATEloopval, BLEprimary);
     beat = BTsecondary;
   }
   else if (strcmp(BTprimary, "Pattern") == 0){
-    patcrossproc(BTsecondary);
+    patshuffle = false;
+    patchangeproc(BTsecondary);
   }
   else if (strcmp(BTprimary, "Listme") == 0){
     BTappneedslists = true;
@@ -196,7 +200,6 @@ void Myriad_BT::uplist(){
       outdata = outdata + "<palmatch," + bipe + ">";
     break;
   }
-  
   BTupcount++;
   if(BTupcount > 9){
     BTupcount = 0;

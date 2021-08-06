@@ -150,19 +150,32 @@ void Firetoucher(bool newPL, CRGB *dest){
 
 void dacirc(bool newPL, CRGB *dest){
   patrunproc(newPL, deffade, 1, 24, RainbowColors);
-  for(int bead = 1; bead < 30; bead++){
-    noise[bead][0] = inoise8(noise[bead][0], timer[newPL]+bead);           // get some noise
-    noise[bead][0] = constrain(noise[bead][0], 60, 195);
-    uint16_t xpos = map(noise[bead][0], 60, 195, 0, LEDstrips);        // Map it to width
+  blackout(LEDmatrixCRGB);
+  uint16_t numbeads = numnoise/2;
+  uint16_t lowbound = 14000;
+  uint16_t hibound = 52000;
 
-    noise[bead][1] = inoise8(noise[bead][1], timer[newPL]*2+random8()+bead); 
-    noise[bead][1] = constrain(noise[bead][1], 60, 195); 
-    uint16_t ypos = map(noise[bead][1], 60, 195, 0, LEDper);
+  for(int bead = 1; bead < numbeads; bead++){
+    noise[newPL][bead][0] = inoise16(noise[newPL][bead][0], timer[newPL]+bead*1000);     // get some noise
+    noise[newPL][bead][0] = constrain(noise[newPL][bead][0], lowbound, hibound);               // keep it within a reasonable scalable boundary (aesthetic judgement)
+    uint16_t xpos = map(noise[newPL][bead][0], lowbound, hibound, 0, LEDstrips);        // Map it to width
 
-    ledmatrix.DrawFilledCircle(xpos, ypos, 2, ColorFromPalette(currentPalette, hue[newPL] + bead*1, 255*bead, LINEARBLEND));
+    noise[newPL][bead][1] = inoise16(noise[newPL][bead][1], timer[newPL]*2+bead*1000); //random8() this was in the last arg
+    noise[newPL][bead][1] = constrain(noise[newPL][bead][1], lowbound, hibound); 
+    uint16_t ypos = map(noise[newPL][bead][1], lowbound, hibound, 0, LEDper);
+
+    ledmatrix.DrawFilledCircle(xpos, ypos, 2, blend(ColorFromPalette(currentPalette, hue[newPL] + bead*1, 255, LINEARBLEND), white, 55));
   }
-  memcpy8 (dest, LEDmatrixCRGB, LEDtotal*3);
-  timer[newPL]+=1;
+  for (uint16_t i = 0; i < LEDtotal; i++) {   // blend em
+    dest[i] = blend( dest[i], LEDmatrixCRGB[i], 45);   // Blend arrays of LEDs, third value is blend %
+  }
+  for (uint16_t i = 0; i < LEDtotal; i++) {   // blend em
+    dest[i] = blend( dest[i], white, 5);   // Blend arrays of LEDs, third value is blend %
+  }
+  //blend( dest, LEDmatrixCRGB, 255);
+  //memcpy8(dest, LEDmatrixCRGB, LEDtotal*3);
+  blur(dest, LEDstrips, LEDper, 45);
+  timer[newPL]+=150;
 }
 
 void Diamondmaw(bool newPL, CRGB *dest){
@@ -265,9 +278,7 @@ void Midearth(bool newPL, CRGB *dest){
   //blur2d( leds, LEDstrips, LEDper, 128);
 }
 
-void Quadplexor(bool newPL, CRGB *dest){
-  //blackout();
-  EQ.proc();
+void Quadplexor(bool newPL, CRGB *dest){  
   patrunproc(newPL, 255, 1, 16, Tropicana);
   for(int band = 0; band < EQbins; band++){
     byte z = map(EQ.EQscaled[band], 0, LEDper, 0, LEDper/2);

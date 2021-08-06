@@ -44,6 +44,23 @@ void Myriad_EQ::dofft(){
     if (i >= 59 && i <= 76)   EQbuff[11]  += (int)EQreal[i];
     if (i >= 77 && i <= 99)   EQbuff[12]  += (int)EQreal[i];
     if (i >= 100)             EQbuff[13]  += (int)EQreal[i];
+
+    /* 14 bands 128 samples
+      0    2   2 
+      1    3   3 
+      2    4   5 
+      3    6   7 
+      4    8  10 
+      5   11  14 
+      6   15  19 
+      7   20  25 
+      8   26  33 
+      9   34  43 
+      10   44  57 
+      11   58  75 
+      12   76  98 
+      13   99 128 
+    */
     
      /*
     //14 bands, 512 samples

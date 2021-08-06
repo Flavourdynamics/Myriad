@@ -60,7 +60,7 @@ void BTparse() {
   }
 }
 
-void patcrossproc(int newpatnum);
+void patchangeproc(int newpatnum);
 void BTselect(){               // or strcpy(STATEloopval, BLEprimary);
   Serial.print(BTprimary);
   Serial.print("-");
@@ -95,7 +95,7 @@ void BTselect(){               // or strcpy(STATEloopval, BLEprimary);
     beat = BTsecondary;
   }
   else if (strcmp(BTprimary, "Pattern") == 0){
-    patcrossproc(BTsecondary);
+    patchangeproc(BTsecondary);
   }
 }
 

@@ -8,7 +8,7 @@
 #ifndef FASTLED_VERSION
   #include <FastLED_Timers.h>
 #endif
-void patcrossproc(int newpatnum);
+void patchangeproc(int newpatnum);
 extern const String BTname;
 
 class Myriad_BT{
