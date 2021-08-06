@@ -17,7 +17,7 @@ void Myriad_EQ::dofft(){
     EQtimer = micros();
     EQreal[i] = analogRead(EQsourcepin); // A conversion takes about 9.7uS on an ESP32
     EQimag[i] = 0;
-    while (micros() < (EQtimer + EQsampletimer)) { /* chill */ }
+    while (micros() < (EQtimer + EQsampletimer)) {} // Do nothing waiting for new input
   }
 
   // Compute FFT
@@ -31,7 +31,7 @@ void Myriad_EQ::dofft(){
     
     //14 bands, 256 samples
     if (i <= 2)               EQbuff[0]  += (int)EQreal[i];
-    if (i == 3)               EQbuff[1]  += (int)EQreal[i];
+    if (i >= 3 && i <= 3)     EQbuff[1]  += (int)EQreal[i];
     if (i >= 4 && i <= 5)     EQbuff[2]  += (int)EQreal[i];
     if (i >= 6 && i <= 7)     EQbuff[3]  += (int)EQreal[i];
     if (i >= 8 && i <= 10)    EQbuff[4]  += (int)EQreal[i];
