@@ -17,6 +17,8 @@
 #define EQsamplefreq   40000 //40000  // Hz, must be 40000 or less due to ADC conversion time. Determines maximum frequency that can be analysed by the FFT Fmax=sampleF/2.
 #define EQsourcepin    2              // Signal in on this pin
 #define EQbins         14             // To change this, you will need to change the bunch of if statements describing the mapping from bins to bands
+#define EQreadint      50 // How often data is gathered and processed
+#define EQdeclineint   5  // How often to flat decline data
 
 class Myriad_EQ {
   private://////////////////////////////////////////////////////////////
@@ -58,15 +60,19 @@ class Myriad_EQ {
     void printall();
     void beatBlink();
     void noisegate();
+    void updatevalues();
     void stats();
     void printDetectedBeats();
     void beatDetection();
     void beatBuckets();
     void calibration();   // Calibrate values for noisethresh() gate function
     void proc();
+    void proc(bool); // calibration overload
+    void proc(bool, bool, bool, uint8_t); // (calibrate, printall, printone, target)
 
     // Actual usable output
     uint16_t EQscaled[EQbins];      // EQ values scaled to LEDper
+    uint16_t EQ10000scaled[EQbins];   // EQ values scaled to 1000
     uint16_t EQflatdecline[EQbins]; // EQ values that decay at 1 LED every run
     // Beat output
     uint8_t EQbeatDetected[EQbins];

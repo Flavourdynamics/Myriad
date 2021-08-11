@@ -6,6 +6,7 @@
 extern NamedPattern Pattern_List[];
 extern NamedPalette Palette_List[];
 
+#ifdef Myriad_Prefs
 void peroidictasks(){
   EVERY_N_MILLIS(500){
     random16_add_entropy(analogRead(A5));  
@@ -25,6 +26,28 @@ void peroidictasks(){
     Prefs.update();
   }
 }
+#else
+void peroidictasks(){
+  EVERY_N_MILLIS(500){
+    random16_add_entropy(analogRead(A5));  
+    Serial.print("Pattern: ");
+    Serial.print(Pattern_List[patternum].Name.c_str());
+    Serial.print("  ---  Palette: ");
+    if(palmatch == false){
+      Serial.print(Palette_List[palnum].Name);
+    }
+    else {
+      Serial.print("Match");
+    }
+    Serial.print("  ---  FPS: ");
+    Serial.print(framerate);
+    Serial.print("  ---  POWER: ");
+    Serial.println(calculate_unscaled_power_mW(writedata, LEDtotal)/5*LEDcurbright);
+    //Serial.print("  ---  FREEMEM: ");
+    //Serial.println(ESP.getFreeHeap());
+  }
+}
+#endif
 
 uint16_t XY(uint16_t x, uint16_t y) {
   uint16_t LEDaddress = x * LEDper + y;
@@ -69,9 +92,9 @@ void patchangeproc(int newpatnum){         // Every time you switch patterns run
   rowcount[1] = 0;
   colcount[0] = colcount[1];    // new pattern is 1, because it is TRUE with newPL
   colcount[1] = 0;
-  uint8_t noisesize = sizeof(noise[0]);
+  //uint8_t noisesize = sizeof(noise[0]);
   //for (uint16_t i = 0; i < numnoise; i++){
-    memcpy(noise[0], noise[1], noisesize);
+  //  memcpy(noise[0], noise[1], noisesize);
   //}
   count[0] = count[1];
   count[1] = 0;
@@ -183,8 +206,9 @@ void fastruntasks(){
 
 #ifdef ESP32Virtual
 void crossfader() {  ////////////////////////// Crossfader //////////////////////////////////////////
+  static uint32_t executiontime;
   EVERY_N_MILLIS_I(mainloop, STATEloopinterval){
-    uint32_t starttime = ESP.getCycleCount();
+    //uint32_t starttime = ESP.getCycleCount();
     if (crossct >= 255) { 
       Pattern_List[patternum].Pattern(true, firstbuffer);   // run only newest pattern if crossfading complete
     }
@@ -199,8 +223,10 @@ void crossfader() {  ////////////////////////// Crossfader /////////////////////
     for (uint16_t i = 0; i < LEDtotal; i++) {   // blend em
       writedata[i] = blend( secondbuffer[i], firstbuffer[i], crossct);   // Blend arrays of LEDs, third value is blend %
     }
-    VIRTUALshow();
-    framerate = 240000000/(ESP.getCycleCount()-starttime); //millis;//(starttime-millis()); //moving average framerate
+    Vshow();
+    framerate = framerate *.99 + .01*(1000000/(micros() - executiontime));
+    executiontime = micros();
+    //framerate = 240000000/(ESP.getCycleCount()-starttime); //millis;//(starttime-millis()); //moving average framerate
   }
   mainloop.setPeriod(STATEloopinterval);
 }

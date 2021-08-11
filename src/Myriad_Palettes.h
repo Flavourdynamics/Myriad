@@ -18,7 +18,15 @@ DEFINE_GRADIENT_PALETTE( Border_Rainbow ){
   115,  255,  0,  0,
   185,  0, 255,  0,
   255,  0, 0, 255 };
-  
+
+DEFINE_GRADIENT_PALETTE( Heatmap ){
+  0,  0,  0,  0,
+  102,  0,  0,  155,
+  125,  55,  0, 155,
+  153,  155, 0,  55,
+  204, 155, 55, 0,
+  255,  255, 255, 255};
+
 DEFINE_GRADIENT_PALETTE( Purple_Cascade ){ //GRB
     0,  0, 0, 0,   //black
   120,  155, 0, 255,   //purple

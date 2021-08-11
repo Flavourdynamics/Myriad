@@ -284,7 +284,7 @@ void Quadplexor(bool newPL){
       leds[XY(LEDstrips/2     +band,   LEDper/2    -2   +z )] = CHSV(255, 0, 255);    // Bottom right
     }
   }
-  VIRTUALshow();
+  Vshow();
 }
 /*
 void Rainbow() {

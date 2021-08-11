@@ -44,22 +44,22 @@ void Myriad_EQ::dofft(){
     if (i >= 59 && i <= 76)   EQbuff[11]  += (int)EQreal[i];
     if (i >= 77 && i <= 99)   EQbuff[12]  += (int)EQreal[i];
     if (i >= 100)             EQbuff[13]  += (int)EQreal[i];
-
-    /* 14 bands 128 samples
-      0    2   2 
-      1    3   3 
-      2    4   5 
-      3    6   7 
-      4    8  10 
-      5   11  14 
-      6   15  19 
-      7   20  25 
-      8   26  33 
-      9   34  43 
-      10   44  57 
-      11   58  75 
-      12   76  98 
-      13   99 128 
+    /*
+    //14 bands 128 samples
+    if (i <= 2)               EQbuff[0]  += (int)EQreal[i];
+    if (i == 3)               EQbuff[1]  += (int)EQreal[i];
+    if (i >= 4 && i <= 5)     EQbuff[2]  += (int)EQreal[i];
+    if (i >= 6 && i <= 7)     EQbuff[3]  += (int)EQreal[i];
+    if (i >= 8 && i <= 10)    EQbuff[4]  += (int)EQreal[i];
+    if (i >= 11 && i <= 14)   EQbuff[5]  += (int)EQreal[i];
+    if (i >= 15 && i <= 19)   EQbuff[6]  += (int)EQreal[i];
+    if (i >= 20 && i <= 25)   EQbuff[7]  += (int)EQreal[i];
+    if (i >= 26 && i <= 33)   EQbuff[8]  += (int)EQreal[i];
+    if (i >= 34 && i <= 43)   EQbuff[9]  += (int)EQreal[i];
+    if (i >= 44 && i <= 57)   EQbuff[10]  += (int)EQreal[i];
+    if (i >= 58 && i <= 75)   EQbuff[11]  += (int)EQreal[i];
+    if (i >= 76 && i <= 98)   EQbuff[12]  += (int)EQreal[i];
+    if (i >= 99)              EQbuff[13]  += (int)EQreal[i];
     */
     
      /*
@@ -118,21 +118,21 @@ void Myriad_EQ::printone(uint8_t target){
 
   Serial.print("EQflatdecline: ");
   Serial.println(EQflatdecline[target], 6);
-  
 
   Serial.println();
 }
 
 void Myriad_EQ::printall(){
+  /*
   for(int i = 0; i < EQbins; i++){
     Serial.print(EQbuff[i]);
     Serial.print(", ");
-  }
-  /*
+  }*/
+
   for(int i = 0; i < EQbins; i++){
     Serial.print(EQscaled[i]);
     Serial.print(" ");
-  }*/
+  }
   Serial.println();
 }
 
@@ -145,9 +145,9 @@ void Myriad_EQ::beatBlink(){
   digitalWrite(ledPin, ledState);
 }
 
-#define LEDper 60
 void Myriad_EQ::noisegate(){
-  uint32_t noisethresh[14] = {1584,  1465,  1298,  1011,  1406,  3387,  2072,  1769,  1115,  1362,  1336,  926,  1005,  1041};
+  #define LEDlength 60      // I can't seem to pass the LEDper define from config to this library
+  uint32_t noisethresh[14] = {3284,  3564,  2383,  2179,  4827,  3844,  3180,  4953,  3376,  4525,  2665,  3322,  2687,  4187};
   uint32_t mintops[14] =     {44277,  20888,  35164,  16594,  27446,  19514,  18645,  14826,  10852,  15894,  20048,  9443,  9684,  9152};
   
   for(int i = 0; i < EQbins; i++){
@@ -158,20 +158,36 @@ void Myriad_EQ::noisegate(){
     uint32_t b = _max(mintops[i], EQmaxes[i]);                // Use the highest max value coded or calculated
     uint32_t y = _max(b, (EQaverage[i] + (2.5 *EQstDev[i]))); // Use the highest max value coded, calculated, or 2.5 std devs away from average
     //uint32_t z = _max(EQbuff[i], EQdecay[i]);
-    uint32_t z = _max(EQbuff[i], 0);                          
- 
+    uint32_t z = _max(EQbuff[i], 0);
+
     if(z >= noisethresh[i]){
-      EQscaled[i] = map(z, x, y, 0, LEDper);          //(input, inmin, inmax, outmin, outmax)
+      EQscaled[i] = map(z, x, y, 0, LEDlength);          //(input, inmin, inmax, outmin, outmax)
+      EQ10000scaled[i] = map(z, x, y, 0, 10000);
     } else {
-      EQscaled[i] = 0;
-    } 
-    if(EQscaled[i] >= EQflatdecline[i]){
-      EQflatdecline[i] = EQscaled[i];
-    } else {
-      EQscaled[i] = EQflatdecline[i];
-      EQflatdecline[i]--;
+      EQscaled[i] = 0;        // Make sure to true 0 the scaled bands
+      EQ10000scaled[i] = 0;
     }
-  } 
+    if(EQscaled[i] >= EQflatdecline[i]){ // If the scaled value is now higher than the flat decline, up the flat decline value
+      EQflatdecline[i] = EQscaled[i];
+    }
+  }
+  this->updatevalues();
+}
+
+void Myriad_EQ::updatevalues(){
+  EVERY_N_MILLIS(EQdeclineint){
+    for(int i = 0; i < EQbins; i++){
+      if(EQflatdecline[i] > 0) {
+        //EQscaled[i] = EQflatdecline[i];
+        EQflatdecline[i]--;
+      }
+      if(EQ10000scaled[i] > 10){
+        EQ10000scaled[i] -= 10;
+      } else {
+        EQ10000scaled[i] = 0;
+      }
+    }
+  }
 }
 
 void Myriad_EQ::stats(){ 
@@ -181,19 +197,19 @@ void Myriad_EQ::stats(){
     } else {
       EQdecay[i] = EQdecay[i] - _max(.1, EQdecay[i] * .01);  // Decay must be relative to the frequency, could change to flat value
     }
-  
+
     if( EQbuff[i] >= EQmaxes[i] ){             // Set maximum volume level for scaling       
       EQmaxes[i] = EQbuff[i];
     } else {
-      EQmaxes[i] = EQmaxes[i] - _max(.1, EQmaxes[i] * .01);                                                                                  // need to make this based on std deviation
+      EQmaxes[i] = EQmaxes[i] - _max(.1, EQmaxes[i] * .01);        // need to make this based on std deviation
     }
-  
+
     if( EQbuff[i] <= EQmins[i] ){             // Set minimum volume level for scaling   
       EQmins[i] = EQbuff[i];
     } else {
-      EQmins[i] = EQmins[i] + _max(.000001, EQaverage[i]*.00005);    // Can't be zero                                                         // need to make this based on std deviation
-    }  
-          
+      EQmins[i] = EQmins[i] + _max(.000001, EQaverage[i]*.00005);    // Can't be zero        // need to make this based on std deviation
+    }
+
     EQstatstotal[i].add(EQbuff[i]);  // Take stats for beat detection
     EQaverage[i] = EQstatstotal[i].average();
     EQstDev[i] = EQstatstotal[i].pop_stdev();
@@ -221,7 +237,7 @@ void Myriad_EQ::printDetectedBeats() {
 void Myriad_EQ::beatDetection() {
   for(int i = 0; i < EQbins; i++){
     // 0 = no beat detected
-    // 1 = beat hasn't dropped / reset yet
+    // 1 = beat hasn't reset yet
     // 2 = beat detected
     // Beat is detected here. Must be greater than the average+(2.3*st.dev) and greater than 0.004212 which may need to be adjusted
     if (EQbuff[i] > EQaverage[i] + 2.5 * EQstDev[i] && EQbuff[i] > 0.004212) {
@@ -323,18 +339,52 @@ void Myriad_EQ::calibration(){   // Calibrate values for noisethresh() gate func
 }
 
 void Myriad_EQ::proc(){
-  EVERY_N_MILLIS(18){
+  EVERY_N_MILLIS(EQreadint){
     this->dofft();            // get data
     this->stats();          // do the math
     this->noisegate();      // apply filters
+    this->updatevalues();
     this->beatDetection();  // find beat
     this->beatBuckets();    // also find beat, i guess
-    //this->calibration();  // run this to set maxes and mins
     //this->beatBlink();    // basic blink on builtinled
-    //EVERY_N_MILLIS(500){
-      //this->printone(13);   // print detailed output for a single band
-      //this->printall();     // print raw data for all bands
-    //}
+  }
+  this->updatevalues();
+}
+
+void Myriad_EQ::proc(bool calib){
+  EVERY_N_MILLIS(10){
+    this->dofft();            // get data
+    this->stats();          // do the math
+    this->noisegate();      // apply filters
+    this->updatevalues();
+    this->beatDetection();  // find beat
+    this->beatBuckets();    // also find beat, i guess
+    this->calibration();  // run this to set maxes and mins
+    //this->beatBlink();    // basic blink on builtinled
+  }
+  this->updatevalues();
+}
+
+void Myriad_EQ::proc(bool calib, bool printmany, bool printone, uint8_t target){
+  EVERY_N_MILLIS(EQreadint){
+    this->dofft();          // get data
+    this->stats();          // do the math
+    this->noisegate();      // apply filters
+    this->updatevalues();
+    this->beatDetection();  // find beat
+    this->beatBuckets();    // also find beat, i guess
+    //this->beatBlink();    // basic blink on builtinled
+    if(calib == true){
+      this->calibration();    // run this to set maxes and mins
+    }
+    EVERY_N_MILLIS(500){
+      if(printmany == true){
+        this->printall();       // print raw data for all bands
+      }
+      if(printone == true){
+        this->printone(target); // print detailed output for a single band
+      }
+    }
   }
 }
 
