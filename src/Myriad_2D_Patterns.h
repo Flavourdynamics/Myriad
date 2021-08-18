@@ -150,7 +150,7 @@ void Firetoucher(bool newPL, CRGB *dest){
 
 void Gentle_Leviathan(bool newPL, CRGB *dest){
   patrunproc(newPL, deffade, 1, 24, RainbowColors);
-  blackout(LEDmatrixCRGB);
+  //blackout(LEDmatrixCRGB);
   uint16_t numbeads = numnoise/2;
   uint16_t lowbound = 14000;
   uint16_t hibound = 52000;
@@ -164,10 +164,10 @@ void Gentle_Leviathan(bool newPL, CRGB *dest){
     noise[newPL][bead][1] = constrain(noise[newPL][bead][1], lowbound, hibound); 
     uint16_t ypos = map(noise[newPL][bead][1], lowbound, hibound, 0, LEDper);
 
-    ledmatrix.DrawFilledCircle(xpos, ypos, 2, blend(ColorFromPalette(currentPalette, hue[newPL] + bead*1, 255, LINEARBLEND), CRGB::White, 55));
+    //ledmatrix.DrawFilledCircle(xpos, ypos, 2, blend(ColorFromPalette(currentPalette, hue[newPL] + bead*1, 255, LINEARBLEND), CRGB::White, 55));
   }
   for (uint16_t i = 0; i < LEDtotal; i++) {   // blend em
-    dest[i] = blend( dest[i], LEDmatrixCRGB[i], 45);   // Blend arrays of LEDs, third value is blend %
+    //dest[i] = blend( dest[i], LEDmatrixCRGB[i], 45);   // Blend arrays of LEDs, third value is blend %
   }
   for (uint16_t i = 0; i < LEDtotal; i++) {   // blend em
     dest[i] = blend( dest[i], CRGB::White, 5);   // Blend arrays of LEDs, third value is blend %

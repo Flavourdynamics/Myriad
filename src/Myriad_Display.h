@@ -19,7 +19,7 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 extern uint16_t EQscaled[EQbins];
 
-void DISPLAYbarz(){
+void DISPLAYbar(){
   int barwideness = SCREEN_WIDTH/14;
   for(int i = 0; i < EQbins; i++){
     int barhightness = map(EQscaled[i], 0, LEDper, 0, SCREEN_HEIGHT); 

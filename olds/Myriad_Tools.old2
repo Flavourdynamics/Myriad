@@ -75,7 +75,7 @@ void fader(bool newPL, byte fadeval) {  // fades led array by given amount
   }
 }
 
-void blackout(CRGB *targetarray) { // wipes target array
+void blackout(CRGB *targetarray) {
   for ( int i = 0; i < LEDtotal; i++) {
     targetarray[i] = CRGB(0, 0, 0);
   }
@@ -377,7 +377,10 @@ uint32_t Wheel(byte WheelPos) {
   return (wheel);
 }
 
-void wu_pixel(uint32_t x, uint32_t y, CRGB * col) {
+
+// x and y are 24.8 fixed point
+// Not Ray Wu. ;)  The idea came from Xiaolin Wu.
+void wu_pixel(uint32_t x, uint32_t y, CRGB *col) {
   // extract the fractional parts and derive their inverses
   uint8_t xx = x & 0xff, yy = y & 0xff, ix = 255 - xx, iy = 255 - yy;
   // calculate the intensities for each affected pixel
@@ -387,9 +390,9 @@ void wu_pixel(uint32_t x, uint32_t y, CRGB * col) {
   // multiply the intensities by the colour, and saturating-add them to the pixels
   for (uint8_t i = 0; i < 4; i++) {
     uint16_t xy = XY((x >> 8) + (i & 1), (y >> 8) + ((i >> 1) & 1));
-    writedata[xy].r = qadd8(writedata[xy].r, (col->r * wu[i]) >> 8);
-    writedata[xy].g = qadd8(writedata[xy].g, (col->g * wu[i]) >> 8);
-    writedata[xy].b = qadd8(writedata[xy].b, (col->b * wu[i]) >> 8);
+    firstbuffer[xy].r = qadd8(firstbuffer[xy].r, (col->r * wu[i]) >> 8);
+    firstbuffer[xy].g = qadd8(firstbuffer[xy].g, (col->g * wu[i]) >> 8);
+    firstbuffer[xy].b = qadd8(firstbuffer[xy].b, (col->b * wu[i]) >> 8);
   }
 }
 
