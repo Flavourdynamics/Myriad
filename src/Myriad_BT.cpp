@@ -1,7 +1,7 @@
 #include <Myriad_BT.h>
 
 Myriad_BT::Myriad_BT(){
-  //Bluetooth.begin(BTname);
+  //this->Bluetooth.begin("Starshroud");
 }
 
 void Myriad_BT::receive(){
@@ -105,7 +105,6 @@ void Myriad_BT::select(){             // or strcpy(STATEloopval, BLEprimary);
 }
 #else
 void Myriad_BT::select(){             // or strcpy(STATEloopval, BLEprimary);
-  
   Serial.print(BTprimary);
   Serial.print("-");
   Serial.println(BTsecondary);
@@ -229,6 +228,7 @@ void Myriad_BT::sendpalettes(){
   }
 }
 
+#ifdef ESP32
 void Myriad_BT::proc(){
   EVERY_N_MILLIS(STATEBTinterval){
     if(Bluetooth.connected()){    // Only run this if connection established
@@ -246,3 +246,21 @@ void Myriad_BT::proc(){
     }
   }
 }
+#endif
+#ifdef TEENSY
+void Myriad_BT::proc(){
+  EVERY_N_MILLIS(STATEBTinterval){
+    this->receive();            // Get data
+    if(BTappneedslists == true){    // If the app does not have the pattern list
+      this->sendpatterns();     // Send the pattern list
+      this->sendpalettes();
+      BTappneedslists = false;
+    }
+    if (BTnewdata == true) {    // If there is new data available
+      this->parse();            // Get data and validate it
+      this->select();           // Process valid data
+    }
+    this->uplist();             // Spam the app with status updates
+  }
+}
+#endif

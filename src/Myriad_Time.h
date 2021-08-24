@@ -1,5 +1,6 @@
 #ifndef Myriad_Time_h
 #define Myriad_Time_h
+#ifdef ESP32
 #include <Arduino.h>
 #include <time.h>
 #ifndef FASTLED_VERSION
@@ -28,5 +29,5 @@ class Myriad_Time {
 
     void sleepcheck();
 };
-
+#endif
 #endif

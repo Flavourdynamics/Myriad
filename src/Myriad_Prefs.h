@@ -1,3 +1,4 @@
+#ifdef ESP32
 #ifndef Myriad_Prefs_h
 #define Myriad_Prefs_h
 // Library for storing preferences between sessions
@@ -70,3 +71,4 @@ void setup() {
   while(true);
 }
 */
+#endif

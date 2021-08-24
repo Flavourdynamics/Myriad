@@ -1,3 +1,4 @@
+#ifdef ESP32
 #include <Myriad_Prefs.h>
 
 Myriad_Prefs::Myriad_Prefs(){
@@ -77,3 +78,5 @@ void setup() {
   while(true);
 }
 */
+
+#endif

@@ -54,6 +54,11 @@ uint16_t XY(uint16_t x, uint16_t y) {
   return LEDaddress;
 }
 
+uint16_t XY(uint16_t x, uint16_t y, uint8_t scalor) {
+  uint16_t LEDaddress = x * LEDper * scalor + y;
+  return LEDaddress;
+}
+
 void huepusher(bool newPL, int8_t hueinc,  uint8_t huespeed) {
   if(newPL == false){
     EVERY_N_MILLIS(huespeed) {

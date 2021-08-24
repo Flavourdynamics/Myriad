@@ -162,6 +162,17 @@ DEFINE_GRADIENT_PALETTE(Pastel){
   235,  167, 244, 255, //pale blue
   255,  50, 205, 255   //bluer teal
 };
+
+DEFINE_GRADIENT_PALETTE(CloudColors){
+  0,     0,   0,   255,
+  128, 255,   255,   255,
+};
+
+DEFINE_GRADIENT_PALETTE(Matrix){
+  0, 65, 255, 9,
+  255, 65, 255, 9,
+};
+
 //Border_Rainbow,Warm_Forest,Popsicle,Arizona_Trip,Pit,Redyell,Startup,Tropicana,Gilt,Sunburst,Newspaper,Purple_Cascade,Blackwhite,RainbowStripeColors,RainbowColors,Pastel
 NamedPalette Palette_List[] = {
   PALETTE_NAME(Border_Rainbow),
@@ -180,6 +191,7 @@ NamedPalette Palette_List[] = {
   PALETTE_NAME(RainbowStripeColors),
   PALETTE_NAME(RainbowColors),
   PALETTE_NAME(Pastel),
+  PALETTE_NAME(CloudColors),
 };
 
 // How many palettes are defined

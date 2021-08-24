@@ -1,3 +1,4 @@
+#ifdef ESP32
 #include <Myriad_Time.h>
 #include <time.h>
 
@@ -71,3 +72,5 @@ String date = String("t," + year + "-" + month+ "-" + day+ " " + hr + ":" + mini
 
 String zonesync = String("u," + String(timezone));   // also send the timezone to the webpage
 */
+
+#endif

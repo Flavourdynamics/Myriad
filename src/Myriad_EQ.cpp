@@ -1,3 +1,4 @@
+#ifdef ESP32
 #include <Myriad_EQ.h>
 // This file contains functions for audio processing
 // Output is in EQscaled[i] and EQdecay[i]
@@ -149,7 +150,6 @@ void Myriad_EQ::noisegate(){
   #define LEDlength 60      // I can't seem to pass the LEDper define from config to this library
   uint32_t noisethresh[14] = {3284,  3564,  2383,  2179,  4827,  3844,  3180,  4953,  3376,  4525,  2665,  3322,  2687,  4187};
   uint32_t mintops[14] =     {44277,  20888,  35164,  16594,  27446,  19514,  18645,  14826,  10852,  15894,  20048,  9443,  9684,  9152};
-  
   for(int i = 0; i < EQbins; i++){
     //uint32_t x = _max(noisethresh[i], EQmins[i]);
     //uint32_t y = _max(mintops[i], );
@@ -161,8 +161,9 @@ void Myriad_EQ::noisegate(){
     uint32_t z = _max(EQbuff[i], 0);
 
     if(z >= noisethresh[i]){
-      EQscaled[i] = map(z, x, y, 0, LEDlength);          //(input, inmin, inmax, outmin, outmax)
+      EQscaled[i] = map(z, x, y, 0, LEDlength);  //(input, inmin, inmax, outmin, outmax)
       EQ10000scaled[i] = map(z, x, y, 0, 10000);
+      EQsummed10000 += EQ10000scaled[i];
     } else {
       EQscaled[i] = 0;        // Make sure to true 0 the scaled bands
       EQ10000scaled[i] = 0;
@@ -594,3 +595,5 @@ void waterfall(int band) {
   }
 }
 */
+
+#endif

@@ -1,3 +1,4 @@
+#ifdef ESP32
 #ifndef Myriad_EQ_h
 #define Myriad_EQ_h
 #include <Arduino.h>
@@ -74,9 +75,11 @@ class Myriad_EQ {
     uint16_t EQscaled[EQbins];      // EQ values scaled to LEDper
     uint16_t EQ10000scaled[EQbins];   // EQ values scaled to 1000
     uint16_t EQflatdecline[EQbins]; // EQ values that decay at 1 LED every run
+    uint16_t EQsummed10000;
     // Beat output
     uint8_t EQbeatDetected[EQbins];
     bool EQbeat;
 };
 
+#endif
 #endif
