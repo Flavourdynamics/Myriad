@@ -7,7 +7,7 @@ extern NamedPattern Pattern_List[];
 extern NamedPalette Palette_List[];
 
 #ifdef Myriad_Prefs
-void peroidictasks(){
+void peroidictasks(){ // Run every 500ms
   EVERY_N_MILLIS(500){
     random16_add_entropy(analogRead(A5));  
     Serial.print("Pattern: ");
@@ -27,7 +27,7 @@ void peroidictasks(){
   }
 }
 #else
-void peroidictasks(){
+void peroidictasks(){ // Run every 500ms
   EVERY_N_MILLIS(500){
     random16_add_entropy(analogRead(A5));  
     Serial.print("Pattern: ");
@@ -49,17 +49,17 @@ void peroidictasks(){
 }
 #endif
 
-uint16_t XY(uint16_t x, uint16_t y) {
+uint16_t XY(uint16_t x, uint16_t y) { // Map XY coordiate to a linear LED address
   uint16_t LEDaddress = x * LEDper + y;
   return LEDaddress;
 }
 
-uint16_t XY(uint16_t x, uint16_t y, uint8_t scalor) {
+uint16_t XY(uint16_t x, uint16_t y, uint8_t scalor){ // Superscaling XY targeting
   uint16_t LEDaddress = x * LEDper * scalor + y;
   return LEDaddress;
 }
 
-void huepusher(bool newPL, int8_t hueinc,  uint8_t huespeed) {
+void huepusher(bool newPL, int8_t hueinc,  uint8_t huespeed){ // Advance appropriate hue
   if(newPL == false){
     EVERY_N_MILLIS(huespeed) {
       hue[0] += hueinc;
@@ -86,7 +86,7 @@ void blackout(CRGB *targetarray) { // wipes target array
   }
 }
 
-void patchangeproc(int newpatnum){         // Every time you switch patterns run this to begin crossfading
+void patchangeproc(int newpatnum){ // Every time you switch patterns run this to begin crossfading
   blackout(secondbuffer);                           //purge the old buffer
   memcpy8 (secondbuffer, firstbuffer, LEDtotal);    // copy data from first buffer to second, for continuity
   blackout(firstbuffer);                            // wipe the new buffer for incoming pattern
@@ -195,14 +195,14 @@ void palettetargeting(TProgmemRGBGradientPalettePtr matchpal) {     // Select wh
   }
 }
 
-void patrunproc(bool newPL, byte fadeamt, int8_t hueinc, uint8_t huespeed, TProgmemRGBGradientPalettePtr procpal){
+void patrunproc(bool newPL, byte fadeamt, int8_t hueinc, uint8_t huespeed, TProgmemRGBGradientPalettePtr procpal){ // Run every time a pattern is called
   // This function does applies all the settings that change between patterns
   huepusher(newPL, hueinc, huespeed);  // Increment the relevant hue interval
   fader(newPL, fadeamt);
   palettetargeting(procpal);
 }
 
-void fastruntasks(){
+void fastruntasks(){  // Every 10 ms
   EVERY_N_MILLIS(10){
     brightnessfader();
     shuffler();
@@ -261,26 +261,21 @@ void crossfader() {  ////////////////////////// Crossfader /////////////////////
 void crossfader() {  ////////////////////////// Crossfader //////////////////////////////////////////
   EVERY_N_MILLIS_I(mainloop, STATEloopinterval){
     if (crossct >= 255) { 
-      Pattern_List[patternum].Pattern(true);   // run completed pattern only when fading is complete
+      Pattern_List[patternum].Pattern(true, firstbuffer);   // run only newest pattern if crossfading complete
     }
     else if (crossct < 255) {
       EVERY_N_MILLIS(20) {
         crossct += 1;           // higher increase faster xfade
       }
-      Pattern_List[oldpattern].Pattern(false);    // Run the old pattern and save to array, bool false = oldpat
-      //for (uint16_t i = 0; i < LEDtotal; i++) {   // blend em
-      //  leds2[i] = leds[i];   // Blend arrays of LEDs, third value is blend %
-      //}
+      Pattern_List[patternum].Pattern(true, firstbuffer);   // Run the newest pattern and save to array, bool true = newpat
+      Pattern_List[oldpattern].Pattern(false, secondbuffer);    // Run the old pattern and save to array, bool false = oldpat
       //memcpy8 (leds2, leds, LEDtotal); // __attribute__((noinline))
-      leds2 = leds;
-  
-      Pattern_List[patternum].Pattern(true);   // Run the new pattern and save to array, bool true = newpat
       for (uint16_t i = 0; i < LEDtotal; i++) {   // blend em
-        leds[i] = blend( leds2[i], leds[i], crossct);   // Blend arrays of LEDs, third value is blend %
+        writedata[i] = blend( secondbuffer[i], firstbuffer[i], crossct);   // Blend arrays of LEDs, third value is blend %
       }
     }
-  FastLED.show();
-  framerate = FastLED.getFPS();
+    FastLED.show();
+    framerate = FastLED.getFPS();
   }
   mainloop.setPeriod(STATEloopinterval);
 }

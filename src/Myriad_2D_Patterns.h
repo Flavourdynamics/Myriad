@@ -223,7 +223,7 @@ void Barbarism(bool newPL, CRGB *dest){
   patrunproc(newPL, 20, 1, 16, Purple_Cascade);
   static uint16_t xmarksthespot;
   uint16_t barlength = 5;
-  uint16_t upperlim = NUMleds - barlength -1;
+  uint16_t upperlim = LEDtotal - barlength -1;
   EVERY_N_MILLIS(100){
     xmarksthespot = random16(0, upperlim);
   }
@@ -295,6 +295,7 @@ void Waterfall(bool newPL, CRGB *dest){
 }
 
 void Quadplexor(bool newPL, CRGB *dest){
+#ifdef ESP32
   EQ.proc();
   patrunproc(newPL, 255, 1, 16, Tropicana);
   for(int band = 0; band < EQbins; band++){
@@ -312,9 +313,11 @@ void Quadplexor(bool newPL, CRGB *dest){
       dest[XY(LEDstrips/2     +band,   LEDper/2    -2   +z )] = CHSV(255, 0, 255);    // Bottom right
     }
   }
+#endif
 }
 
 void Spectral_Waterfall(bool newPL, CRGB *dest){
+#ifdef ESP32
   EQ.proc();
   patrunproc(newPL, 0, 1, 16, Heatmap);
   EVERY_N_MILLIS(20){
@@ -325,9 +328,11 @@ void Spectral_Waterfall(bool newPL, CRGB *dest){
       dest[XY(LEDstrips/2-1-band, 0)] = ColorFromPalette(currentPalette, tempvalue, 127+(tempvalue*0.5), LINEARBLEND);
     }
   }
+#endif
 }
 
 void Digital_Rain(bool newPL, CRGB *dest){           // Have to randomize target locations on first boot
+#ifdef ESP32
   EQ.proc();
   patrunproc(newPL, 20, 1, 16, Pastel);
   uint8_t numofcodes = 60;    // struct targets {uint8_t x, uint8_t y, uint8_t direction, CHSV colour};
@@ -364,6 +369,7 @@ void Digital_Rain(bool newPL, CRGB *dest){           // Have to randomize target
       count[newPL] = 0;
     }
   }
+#endif
 }
 
 void Canada(bool newPL, CRGB *dest){
