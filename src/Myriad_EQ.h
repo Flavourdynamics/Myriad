@@ -1,4 +1,3 @@
-#ifdef ESP32
 #ifndef Myriad_EQ_h
 #define Myriad_EQ_h
 #include <Arduino.h>
@@ -13,14 +12,30 @@
 //    pinMode(ledPin, OUTPUT);
 
 #include <Statistic.h>
-#include <arduinoFFT.h>
-#define EQsamples      256            // Must be a power of 2
-#define EQsamplefreq   40000 //40000  // Hz, must be 40000 or less due to ADC conversion time. Determines maximum frequency that can be analysed by the FFT Fmax=sampleF/2.
-#define EQsourcepin    2              // Signal in on this pin
-#define EQbins         14             // To change this, you will need to change the bunch of if statements describing the mapping from bins to bands
+#define EQbins         14    // To change this, you will need to change the bunch of if statements describing the mapping from bins to bands
+#define EQsamples      256    // Must be a power of 2
 #define EQreadint      50 // How often data is gathered and processed
 #define EQdeclineint   5  // How often to flat decline data
 
+#ifdef ESP32
+  #include <arduinoFFT.h>
+  #define EQsamplefreq   40000 //40000  // Hz, must be 40000 or less due to ADC conversion time. Determines maximum frequency that can be analysed by the FFT Fmax=sampleF/2.
+  #define EQsourcepin    2              // Signal in on this pin
+#endif
+#ifdef TEENSY
+  #include <Audio.h>
+  #include <Wire.h>
+  #include <SPI.h>
+  #include <SD.h>
+  #include <SerialFlash.h>
+  AudioInputI2S       i2s;
+  AudioMixer4         mixer;
+  AudioAnalyzeFFT256  FFT;
+  AudioConnection     patchCord1(i2s, 0, mixer, 0);
+  AudioConnection     patchCord2(i2s, 1, mixer, 1);
+  AudioConnection     patchCord3(mixer, FFT);
+  float fftdata[EQbins];
+#endif
 class Myriad_EQ {
   private://////////////////////////////////////////////////////////////
     // FFT parameters
@@ -49,8 +64,9 @@ class Myriad_EQ {
     //elapsedMillis EQbeatTimer[EQbins];
     const uint8_t ledPin =  25;
     bool ledState = LOW; 
-
-    arduinoFFT FFT = arduinoFFT(EQreal, EQimag, EQsamples, EQsamplefreq);
+    #ifdef ESP32
+      arduinoFFT FFT = arduinoFFT(EQreal, EQimag, EQsamples, EQsamplefreq);
+    #endif
     Statistic EQstatstotal[EQbins];
     
   public:///////////////////////////////////////////////////////////////
@@ -81,5 +97,4 @@ class Myriad_EQ {
     bool EQbeat;
 };
 
-#endif
 #endif

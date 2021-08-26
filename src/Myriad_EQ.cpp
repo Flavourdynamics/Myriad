@@ -1,12 +1,18 @@
-#ifdef ESP32
 #include <Myriad_EQ.h>
 // This file contains functions for audio processing
 // Output is in EQscaled[i] and EQdecay[i]
 
 Myriad_EQ::Myriad_EQ(){
-  EQsampletimer = round(1000000 * (1.0 / EQsamplefreq));
+  #ifdef ESP32
+    EQsampletimer = round(1000000 * (1.0 / EQsamplefreq));
+  #endif
+  #ifdef TEENSY
+    AudioMemory(12);
+    FFT.windowFunction(AudioWindowHanning1024);   //myFFT.windowFunction(NULL);
+    FFT.averageTogether(50);
+  #endif
 }
-
+#ifdef ESP32
 void Myriad_EQ::dofft(){
   // Reset buffer
   for (int i = 0; i < EQbins; i++){
@@ -99,7 +105,44 @@ void Myriad_EQ::dofft(){
     */  
   }
 }
-  
+#endif
+#ifdef TEENSY
+void Myriad_EQ::dofft(){
+  if (FFT.available()) {
+    fftdata[0] = FFT.read(0,0);
+    fftdata[1] = FFT.read(1,1);
+    fftdata[2] = FFT.read(2,3);
+    fftdata[3] = FFT.read(4,5);
+    fftdata[4] = FFT.read(6,8);
+    fftdata[5] = FFT.read(9,12);
+    fftdata[6] = FFT.read(13,17);
+    fftdata[7] = FFT.read(18,23);
+    fftdata[8] = FFT.read(24,31);
+    fftdata[9] = FFT.read(32,42);
+    fftdata[10] = FFT.read(43,56);
+    fftdata[11] = FFT.read(57,74);
+    fftdata[12] = FFT.read(75,97);
+    fftdata[13] = FFT.read(98,127);
+    /*
+   0    0
+   1    1
+   2    3
+   4    6
+   7   11
+  12   18
+  19   29
+  30   45
+  46   68
+  69  103
+ 104  154
+ 155  230
+ 231  343
+ 344  511
+*/ //read(firstBin, lastBin);
+  }
+}
+#endif
+
 void Myriad_EQ::printone(uint8_t target){
   
   Serial.print("EQbuff: ");
@@ -595,5 +638,3 @@ void waterfall(int band) {
   }
 }
 */
-
-#endif

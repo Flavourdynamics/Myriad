@@ -5,7 +5,7 @@ const uint16_t numPins = 8;
 //byte pinList[numPins] = {19,18,14,15,17,16,22,23,  3,4,6,7,8,9,10,11}; // Apparently any T4.x pins can be used in parallel
 const uint8_t pinList[numPins] = {19,18,14,15,17,16,22,23}; // stock 4.0 parallel pins
 const uint16_t ledsPerPin = 60;
-/*
+
 void setup(){
   octo.begin();
   pcontroller = new CTeensy4Controller<GRB, WS2811_800kHz>(&octo);
