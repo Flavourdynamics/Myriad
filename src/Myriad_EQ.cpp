@@ -105,6 +105,7 @@ void Myriad_EQ::dofft(){
 #endif
 #ifdef TEENSY
 void Myriad_EQ::dofft(){
+  /*
   if (FFT.available()) {
     Serial.println();
     fftdata[0] = FFT.read(0,0);
@@ -127,7 +128,6 @@ void Myriad_EQ::dofft(){
     }
     Serial.println();
 
-/*
     EQbuff[0] = FFT.read(0,0) * 10000;
     EQbuff[1] = FFT.read(1,1) * 10000;
     EQbuff[2] = FFT.read(2,3) * 10000;
@@ -142,8 +142,8 @@ void Myriad_EQ::dofft(){
     EQbuff[11] = FFT.read(57,74) * 10000;
     EQbuff[12] = FFT.read(75,97) * 10000;
     EQbuff[13] = FFT.read(98,127) * 10000;
-*/
-/*
+
+
    0    0
    1    1
    2    3
@@ -157,9 +157,10 @@ void Myriad_EQ::dofft(){
  104  154
  155  230
  231  343
- 344  511*/
+ 344  511
  //read(firstBin, lastBin);
   }
+  */
 }
 #endif
 

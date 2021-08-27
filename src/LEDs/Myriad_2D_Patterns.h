@@ -1,7 +1,8 @@
 #ifndef Myriad_2D_Patterns_h
 #define Myriad_2D_Patterns_h
 #include <Myriad_Types.h>
-#include <Myriad_Arrays.h>
+#include "LEDs/Myriad_Palettes.h"
+#include "LEDs/Myriad_Arrays.h"
 /*
 void NewPattern(bool newPL, CRGB *dest){
   //patrunproc(bool newPL, byte fadeamt, int8_t hueinc, uint8_t huespeed, TProgmemRGBGradientPalettePtr matchpal)
