@@ -4,7 +4,9 @@
 // Throw BT.Bluetooth.begin("Name"); into setup
 // and then run BT.proc(); in loop
 #include <Arduino.h>
-
+#ifndef FASTLED_VERSION
+  #include <FastLED_Timers.h>
+#endif
 #ifdef ESP32
   #include <BluetoothSerial.h>
 #endif
@@ -12,9 +14,7 @@
   #define Bluetooth Serial1
   #define HWSERIAL Serial1
 #endif
-#ifndef FASTLED_VERSION
-  #include <FastLED_Timers.h>
-#endif
+
 void patchangeproc(int newpatnum);
 extern const String BTname;
 
@@ -31,7 +31,7 @@ class Myriad_BT{
     char endMarker = '>';
     uint8_t BTupcount;
     uint16_t STATEBTinterval = 20;
-    
+
   public:////////////////////////////////////////////////////
     #ifdef ESP32
       BluetoothSerial Bluetooth;

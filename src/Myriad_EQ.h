@@ -1,9 +1,11 @@
 #ifndef Myriad_EQ_h
 #define Myriad_EQ_h
 #include <Arduino.h>
+#include <Myriad_Types.h>
 #ifndef FASTLED_VERSION
   #include <FastLED_Timers.h>
 #endif
+
 // This file contains functions for audio processing
 // Output is in EQscaled[i] and EQdecay[i]
 
@@ -23,40 +25,28 @@
   #define EQsourcepin    2              // Signal in on this pin
 #endif
 #ifdef TEENSY
-  #include <Audio.h>
-  #include <Wire.h>
-  #include <SPI.h>
-  #include <SD.h>
-  #include <SerialFlash.h>
-  AudioInputI2S       i2s;
-  AudioMixer4         mixer;
-  AudioAnalyzeFFT256  FFT;
-  AudioConnection     patchCord1(i2s, 0, mixer, 0);
-  AudioConnection     patchCord2(i2s, 1, mixer, 1);
-  AudioConnection     patchCord3(mixer, FFT);
-  float fftdata[EQbins];
+
 #endif
+
 class Myriad_EQ {
   private://////////////////////////////////////////////////////////////
     // FFT parameters
     uint16_t EQsampletimer;
-    uint8_t EQpeak[EQbins] = {0};              // The length of these arrays must be >= NUM_BANDS
-    int16_t EQoldBarHeights[EQbins] = {0};
+    uint8_t EQpeak[EQbins];              // The length of these arrays must be >= NUM_BANDS
+    int16_t EQoldBarHeights[EQbins];
     uint16_t EQnoisecutoff[EQbins];
     double EQreal[EQsamples];
     double EQimag[EQsamples];
     unsigned long EQtimer;
-
     // FFT Buffers and boundaries
     uint32_t EQbuff[EQbins];    // Input buffer collects data directly from the FFT
     uint32_t EQdecay[EQbins];   // Version of FFT data that 
     uint32_t EQmaxes[EQbins];   // A moving maxiumum for each FFT band
     uint32_t EQmins[EQbins] = {9999999, 9999999, 9999999, 9999999, 9999999, 9999999, 9999999, 9999999, 9999999, 9999999, 9999999, 9999999, 9999999, 9999999};
-
-    //Math
+    // Math
+    Statistic EQstatstotal[EQbins];
     uint32_t EQaverage[EQbins];
     uint32_t EQstDev[EQbins];
-
     // Beat
     uint16_t EQbeatInterval[EQbins];
     uint16_t EQbeatIntervalOld[EQbins];
@@ -67,11 +57,19 @@ class Myriad_EQ {
     #ifdef ESP32
       arduinoFFT FFT = arduinoFFT(EQreal, EQimag, EQsamples, EQsamplefreq);
     #endif
-    Statistic EQstatstotal[EQbins];
-    
+    #ifdef TEENSY
+
+      //AudioConnection     patchCord1();
+      //AudioConnection     patchCord2();
+      //AudioConnection     patchCord3();
+      //AudioConnection     patchCord1(this->i2s, 0, mixer, 0);
+      //AudioConnection     patchCord2(i2s, 1, mixer, 1);
+      //AudioConnection     patchCord3(mixer, FFT);
+      float fftdata[EQbins];
+    #endif
+
   public:///////////////////////////////////////////////////////////////
     Myriad_EQ();
-  
     void dofft();
     void printone(uint8_t target);
     void printall();

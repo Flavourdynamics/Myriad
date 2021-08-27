@@ -20,6 +20,7 @@ extern NamedPalette Palette_List[];
 extern NamedPattern Pattern_List[];
 extern const uint16_t NUMpalettes;
 
-//#define __max(a,b) (((a) > (b)) ? (a) : (b))
+#define _min(a,b) ((a)<(b)?(a):(b))
+#define _max(a,b) ((a)>(b)?(a):(b))
 
 #endif

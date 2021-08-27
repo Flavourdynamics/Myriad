@@ -7,9 +7,7 @@ Myriad_EQ::Myriad_EQ(){
     EQsampletimer = round(1000000 * (1.0 / EQsamplefreq));
   #endif
   #ifdef TEENSY
-    AudioMemory(12);
-    FFT.windowFunction(AudioWindowHanning1024);   //myFFT.windowFunction(NULL);
-    FFT.averageTogether(50);
+  
   #endif
 }
 #ifdef ESP32
@@ -68,7 +66,6 @@ void Myriad_EQ::dofft(){
     if (i >= 76 && i <= 98)   EQbuff[12]  += (int)EQreal[i];
     if (i >= 99)              EQbuff[13]  += (int)EQreal[i];
     */
-    
      /*
     //14 bands, 512 samples
     if (i <= 2)               EQbuff[0]  += (int)EQreal[i];
@@ -109,6 +106,7 @@ void Myriad_EQ::dofft(){
 #ifdef TEENSY
 void Myriad_EQ::dofft(){
   if (FFT.available()) {
+    Serial.println();
     fftdata[0] = FFT.read(0,0);
     fftdata[1] = FFT.read(1,1);
     fftdata[2] = FFT.read(2,3);
@@ -123,7 +121,29 @@ void Myriad_EQ::dofft(){
     fftdata[11] = FFT.read(57,74);
     fftdata[12] = FFT.read(75,97);
     fftdata[13] = FFT.read(98,127);
-    /*
+    for(int i = 0; i < EQbins; i++){
+      Serial.print(fftdata[i]);
+      Serial.print("  ");
+    }
+    Serial.println();
+
+/*
+    EQbuff[0] = FFT.read(0,0) * 10000;
+    EQbuff[1] = FFT.read(1,1) * 10000;
+    EQbuff[2] = FFT.read(2,3) * 10000;
+    EQbuff[3] = FFT.read(4,5) * 10000;
+    EQbuff[4] = FFT.read(6,8) * 10000;
+    EQbuff[5] = FFT.read(9,12) * 10000;
+    EQbuff[6] = FFT.read(13,17) * 10000;
+    EQbuff[7] = FFT.read(18,23) * 10000;
+    EQbuff[8] = FFT.read(24,31) * 10000;
+    EQbuff[9] = FFT.read(32,42) * 10000;
+    EQbuff[10] = FFT.read(43,56) * 10000;
+    EQbuff[11] = FFT.read(57,74) * 10000;
+    EQbuff[12] = FFT.read(75,97) * 10000;
+    EQbuff[13] = FFT.read(98,127) * 10000;
+*/
+/*
    0    0
    1    1
    2    3
@@ -137,32 +157,25 @@ void Myriad_EQ::dofft(){
  104  154
  155  230
  231  343
- 344  511
-*/ //read(firstBin, lastBin);
+ 344  511*/
+ //read(firstBin, lastBin);
   }
 }
 #endif
 
 void Myriad_EQ::printone(uint8_t target){
-  
   Serial.print("EQbuff: ");
   Serial.println(EQbuff[target], 6);
-  
   Serial.print("EQmins: ");
   Serial.println(EQmins[target], 6);
-  
   Serial.print("EQmaxes: ");
   Serial.println(EQmaxes[target], 6);
-  
   Serial.print("EQscaled: ");
   Serial.println(EQscaled[target]);
-
   Serial.print("EQdecay: ");
   Serial.println(EQdecay[target], 6);
-
   Serial.print("EQflatdecline: ");
   Serial.println(EQflatdecline[target], 6);
-
   Serial.println();
 }
 
@@ -189,10 +202,11 @@ void Myriad_EQ::beatBlink(){
   digitalWrite(ledPin, ledState);
 }
 
+
 void Myriad_EQ::noisegate(){
-  #define LEDlength 60      // I can't seem to pass the LEDper define from config to this library
-  uint32_t noisethresh[14] = {3284,  3564,  2383,  2179,  4827,  3844,  3180,  4953,  3376,  4525,  2665,  3322,  2687,  4187};
-  uint32_t mintops[14] =     {44277,  20888,  35164,  16594,  27446,  19514,  18645,  14826,  10852,  15894,  20048,  9443,  9684,  9152};
+extern const uint16_t LEDper;      // I can't seem to pass the LEDper define from config to this library
+  uint32_t noisethresh[EQbins] = {3284,  3564,  2383,  2179,  4827,  3844,  3180,  4953,  3376,  4525,  2665,  3322,  2687,  4187};
+  uint32_t mintops[EQbins] =     {44277,  20888,  35164,  16594,  27446,  19514,  18645,  14826,  10852,  15894,  20048,  9443,  9684,  9152};
   for(int i = 0; i < EQbins; i++){
     //uint32_t x = _max(noisethresh[i], EQmins[i]);
     //uint32_t y = _max(mintops[i], );
@@ -204,7 +218,7 @@ void Myriad_EQ::noisegate(){
     uint32_t z = _max(EQbuff[i], 0);
 
     if(z >= noisethresh[i]){
-      EQscaled[i] = map(z, x, y, 0, LEDlength);  //(input, inmin, inmax, outmin, outmax)
+      EQscaled[i] = map(z, x, y, 0, LEDper);  //(input, inmin, inmax, outmin, outmax)
       EQ10000scaled[i] = map(z, x, y, 0, 10000);
       EQsummed10000 += EQ10000scaled[i];
     } else {
@@ -360,7 +374,7 @@ void Myriad_EQ::calibration(){   // Calibrate values for noisethresh() gate func
     // Print data
     if(calibcounter >= sampleruntime){    // If we've taken enough samples
       EVERY_N_MILLIS(1000){
-        Serial.print("//Mins:");
+        Serial.print("// Mins:");
         for(uint8_t i = 0; i < EQbins; i++){    // Print the mins
           Serial.print("  ");
           //Serial.print(i);
@@ -369,7 +383,7 @@ void Myriad_EQ::calibration(){   // Calibrate values for noisethresh() gate func
         }
         Serial.println();
 
-        Serial.print("//Maxes:");
+        Serial.print("// Maxes:");
         for(uint8_t i = 0; i < EQbins; i++){    // Print the maxes
           Serial.print("  ");
           //Serial.print(i);
