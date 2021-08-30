@@ -6,9 +6,6 @@ Myriad_EQ::Myriad_EQ(){
   #ifdef ESP32
     EQsampletimer = round(1000000 * (1.0 / EQsamplefreq));
   #endif
-  #ifdef TEENSY
-  
-  #endif
 }
 #ifdef ESP32
 void Myriad_EQ::dofft(){
@@ -105,62 +102,7 @@ void Myriad_EQ::dofft(){
 #endif
 #ifdef TEENSY
 void Myriad_EQ::dofft(){
-  /*
-  if (FFT.available()) {
-    Serial.println();
-    fftdata[0] = FFT.read(0,0);
-    fftdata[1] = FFT.read(1,1);
-    fftdata[2] = FFT.read(2,3);
-    fftdata[3] = FFT.read(4,5);
-    fftdata[4] = FFT.read(6,8);
-    fftdata[5] = FFT.read(9,12);
-    fftdata[6] = FFT.read(13,17);
-    fftdata[7] = FFT.read(18,23);
-    fftdata[8] = FFT.read(24,31);
-    fftdata[9] = FFT.read(32,42);
-    fftdata[10] = FFT.read(43,56);
-    fftdata[11] = FFT.read(57,74);
-    fftdata[12] = FFT.read(75,97);
-    fftdata[13] = FFT.read(98,127);
-    for(int i = 0; i < EQbins; i++){
-      Serial.print(fftdata[i]);
-      Serial.print("  ");
-    }
-    Serial.println();
-
-    EQbuff[0] = FFT.read(0,0) * 10000;
-    EQbuff[1] = FFT.read(1,1) * 10000;
-    EQbuff[2] = FFT.read(2,3) * 10000;
-    EQbuff[3] = FFT.read(4,5) * 10000;
-    EQbuff[4] = FFT.read(6,8) * 10000;
-    EQbuff[5] = FFT.read(9,12) * 10000;
-    EQbuff[6] = FFT.read(13,17) * 10000;
-    EQbuff[7] = FFT.read(18,23) * 10000;
-    EQbuff[8] = FFT.read(24,31) * 10000;
-    EQbuff[9] = FFT.read(32,42) * 10000;
-    EQbuff[10] = FFT.read(43,56) * 10000;
-    EQbuff[11] = FFT.read(57,74) * 10000;
-    EQbuff[12] = FFT.read(75,97) * 10000;
-    EQbuff[13] = FFT.read(98,127) * 10000;
-
-
-   0    0
-   1    1
-   2    3
-   4    6
-   7   11
-  12   18
-  19   29
-  30   45
-  46   68
-  69  103
- 104  154
- 155  230
- 231  343
- 344  511
- //read(firstBin, lastBin);
-  }
-  */
+  //teensyfft();
 }
 #endif
 
@@ -249,12 +191,13 @@ void Myriad_EQ::updatevalues(){
   }
 }
 
-void Myriad_EQ::stats(){ 
+void Myriad_EQ::stats(){
+  float ultralow = 0.000000000000001;
   for(int i = 0; i < EQbins; i++){    
     if( EQbuff[i] >= EQdecay[i]){              // Reset decaying value to smooth out drops
       EQdecay[i] = EQbuff[i];
     } else {
-      EQdecay[i] = EQdecay[i] - _max(.1, EQdecay[i] * .01);  // Decay must be relative to the frequency, could change to flat value
+      EQdecay[i] = EQdecay[i] - _max(ultralow, EQdecay[i] * .01);  // Decay must be relative to the frequency, could change to flat value
     }
 
     if( EQbuff[i] >= EQmaxes[i] ){             // Set maximum volume level for scaling       
@@ -266,7 +209,7 @@ void Myriad_EQ::stats(){
     if( EQbuff[i] <= EQmins[i] ){             // Set minimum volume level for scaling   
       EQmins[i] = EQbuff[i];
     } else {
-      EQmins[i] = EQmins[i] + _max(.000001, EQaverage[i]*.00005);    // Can't be zero        // need to make this based on std deviation
+      EQmins[i] = EQmins[i] + _max(ultralow, EQaverage[i]*ultralow);    // Can't be zero        // need to make this based on std deviation
     }
 
     EQstatstotal[i].add(EQbuff[i]);  // Take stats for beat detection

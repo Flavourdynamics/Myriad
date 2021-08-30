@@ -24,29 +24,21 @@
   #define EQsamplefreq   40000 //40000  // Hz, must be 40000 or less due to ADC conversion time. Determines maximum frequency that can be analysed by the FFT Fmax=sampleF/2.
   #define EQsourcepin    2              // Signal in on this pin
 #endif
-#ifdef TEENSY
-
-#endif
 
 class Myriad_EQ {
   private://////////////////////////////////////////////////////////////
     // FFT parameters
-    uint16_t EQsampletimer;
-    uint8_t EQpeak[EQbins];              // The length of these arrays must be >= NUM_BANDS
-    int16_t EQoldBarHeights[EQbins];
-    uint16_t EQnoisecutoff[EQbins];
-    double EQreal[EQsamples];
-    double EQimag[EQsamples];
-    unsigned long EQtimer;
+    float EQpeak[EQbins];              // The length of these arrays must be >= NUM_BANDS
+    float EQnoisecutoff[EQbins];
     // FFT Buffers and boundaries
-    uint32_t EQbuff[EQbins];    // Input buffer collects data directly from the FFT
-    uint32_t EQdecay[EQbins];   // Version of FFT data that 
-    uint32_t EQmaxes[EQbins];   // A moving maxiumum for each FFT band
-    uint32_t EQmins[EQbins] = {9999999, 9999999, 9999999, 9999999, 9999999, 9999999, 9999999, 9999999, 9999999, 9999999, 9999999, 9999999, 9999999, 9999999};
+    float EQbuff[EQbins];    // Input buffer collects data directly from the FFT
+    float EQdecay[EQbins];   // Version of FFT data that 
+    float EQmaxes[EQbins];   // A moving maxiumum for each FFT band
+    float EQmins[EQbins] = {9999999, 9999999, 9999999, 9999999, 9999999, 9999999, 9999999, 9999999, 9999999, 9999999, 9999999, 9999999, 9999999, 9999999};
     // Math
     Statistic EQstatstotal[EQbins];
-    uint32_t EQaverage[EQbins];
-    uint32_t EQstDev[EQbins];
+    float EQaverage[EQbins];
+    float EQstDev[EQbins];
     // Beat
     uint16_t EQbeatInterval[EQbins];
     uint16_t EQbeatIntervalOld[EQbins];
@@ -55,17 +47,11 @@ class Myriad_EQ {
     const uint8_t ledPin =  25;
     bool ledState = LOW; 
     #ifdef ESP32
+      uint16_t EQsampletimer;
+      double EQreal[EQsamples];
+      double EQimag[EQsamples];
+      unsigned long EQtimer;
       arduinoFFT FFT = arduinoFFT(EQreal, EQimag, EQsamples, EQsamplefreq);
-    #endif
-    #ifdef TEENSY
-
-      //AudioConnection     patchCord1();
-      //AudioConnection     patchCord2();
-      //AudioConnection     patchCord3();
-      //AudioConnection     patchCord1(this->i2s, 0, mixer, 0);
-      //AudioConnection     patchCord2(i2s, 1, mixer, 1);
-      //AudioConnection     patchCord3(mixer, FFT);
-      float fftdata[EQbins];
     #endif
 
   public:///////////////////////////////////////////////////////////////
