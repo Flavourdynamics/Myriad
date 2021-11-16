@@ -59,6 +59,6 @@ void EQprintone(uint8_t target);
 void EQprintall();
 void EQproc();
 void EQproc(bool); // calibration overload
-void EQproc(bool, bool, uint8_t); // (calibrate, printall, printone, target)
+void EQproc(byte, bool, uint8_t); // ([0=no, 1=buffer, 2=scaled], printone, target)
 
 #endif

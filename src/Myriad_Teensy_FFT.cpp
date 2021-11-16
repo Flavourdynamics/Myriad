@@ -4,11 +4,14 @@
 #include <SPI.h>
 #include <SD.h>
 #include <SerialFlash.h>
-AudioInputI2S       i2s;
+AudioInputI2S       i2s; // BCLK 21, MCLK 23, (RX/DOUT) 8, LRCLK 20
+AudioInputAnalog    adc; // Default 16/A2
 AudioMixer4         mixer;
-AudioAnalyzeFFT1024 FFT;
-AudioConnection     patchCord1(i2s, 0, mixer, 0);
-AudioConnection     patchCord2(i2s, 1, mixer, 1);
+AudioAnalyzeFFT1024  FFT;
+//AudioAnalyzeFFT256  FFT;
+AudioConnection     patchCord1(adc, 0, mixer, 0);
+//AudioConnection     patchCord1(i2s, 0, mixer, 0);
+//AudioConnection     patchCord2(i2s, 1, mixer, 1);
 AudioConnection     patchCord3(mixer, 0, FFT, 0);
 
 float fftdata[EQbins];
@@ -77,10 +80,13 @@ extern bool ledState;
 
 void EQsetup(){
   AudioMemory(12);
-  //mixer.gain(0, 1);
-  //mixer.gain(1, 1);
-  FFT.windowFunction(AudioWindowHanning1024);   //myFFT.windowFunction(NULL);
-  FFT.averageTogether(10);
+  mixer.gain(0, 2);
+  mixer.gain(1, 2);
+  //FFT.windowFunction(AudioWindowHanning256);
+  FFT.windowFunction(AudioWindowBlackmanHarris256);
+  //FFT.windowFunction(AudioWindowHanning1024);
+  //FFT.windowFunction(AudioWindowBlackmanHarris1024);
+  FFT.averageTogether(50);
 }
 #ifdef ESP32
 void EQdofft(){
@@ -177,22 +183,23 @@ void EQdofft(){
 #endif
 #ifdef TEENSY
 void EQdofft(){
-   for(uint16_t i = 0; i < EQbins; i++){
+  for(uint16_t i = 0; i < EQbins; i++){
     uint16_t binDelta = fftindex1024[i*2];
+    //uint16_t binDelta = fftindex256[i*2];
     EQbuff[i] = FFT.read(binDelta, binDelta+1);
-    //Serial.print(EQbuff[i], 12);
-    //Serial.print("  ");
   }
-  //Serial.println();
 }
 #endif
 
-// Mins:  0.063232421875000,  0.000122070312500,  0.000122070312500,  0.000122070312500,  0.000122070312500,  0.000122070312500,  0.000000000000000,  0.000000000000000,  0.000061035156250,  0.000061035156250,  0.000000000000000,  0.000000000000000,  0.000000000000000,  0.000000000000000
-// Maxes:  0.096313476562500,  0.020080566406250,  0.019653320312500,  0.013305664062500,  0.008850097656250,  0.011352539062500,  0.005615234375000,  0.008605957031250,  0.001831054687500,  0.001831054687500,  0.002563476562500,  0.001342773437500,  0.001647949218750,  0.002136230468750
+// Mins:  0.331848144531250,  0.000122070312500,  0.000000000000000,  0.000061035156250,  0.000122070312500,  0.000915527343750,  0.000122070312500,  0.000061035156250,  0.000122070312500,  0.000122070312500,  0.000000000000000,  0.000000000000000,  0.000061035156250,  0.000061035156250
+// Maxes:  0.382812500000000,  0.267272949218750,  0.285217285156250,  0.187377929687500,  0.057800292968750,  0.048522949218750,  0.034667968750000,  0.015991210937500,  0.016113281250000,  0.008361816406250,  0.011413574218750,  0.004821777343750,  0.001770019531250,  0.000671386718750
 void EQnoisegate(){
-extern const uint16_t LEDper;      // I can't seem to pass the LEDper define from config to this library
-  float noisethresh[EQbins] = {0.063232421875000,  0.000122070312500,  0.000122070312500,  0.000122070312500,  0.000122070312500,  0.000122070312500,  0.000000000000000,  0.000000000000000,  0.000061035156250,  0.000061035156250,  0.000000000000000,  0.000000000000000,  0.000000000000000,  0.000000000000000};
-  float mintops[EQbins] =     {0.096313476562500,  0.020080566406250,  0.019653320312500,  0.013305664062500,  0.008850097656250,  0.011352539062500,  0.005615234375000,  0.008605957031250,  0.001831054687500,  0.001831054687500,  0.002563476562500,  0.001342773437500,  0.001647949218750,  0.002136230468750};
+  extern const uint16_t LEDper;      // I can't seem to pass the LEDper define from config to this library
+
+  float noisethresh[EQbins] = {0.539001464843750,  0.282653808593750,  0.069396972656250,  0.000366210937500,  0.000305175781250,  0.000244140625000,  0.000244140625000,  0.001892089843750,  0.000183105468750,  0.000183105468750,  0.000122070312500,  0.000122070312500,  0.000000000000000,  0.000000000000000};
+  float mintops[EQbins] =     {0.146667480468750,  0.085449218750000,  0.028625488281250,  0.004211425781250,  0.002197265625000,  0.001831054687500,  0.002624511718750,  0.000976562500000,  0.000244140625000,  0.000183105468750,  0.000061035156250,  0.000244140625000,  0.000000000000000,  0.000000000000000};
+  //float noisethresh[EQbins] = {0.063232421875000,  0.000122070312500,  0.000122070312500,  0.000122070312500,  0.000122070312500,  0.000122070312500,  0.000000000000000,  0.000000000000000,  0.000061035156250,  0.000061035156250,  0.000000000000000,  0.000000000000000,  0.000000000000000,  0.000000000000000};
+  //float mintops[EQbins] =     {0.096313476562500,  0.020080566406250,  0.019653320312500,  0.013305664062500,  0.008850097656250,  0.011352539062500,  0.005615234375000,  0.008605957031250,  0.001831054687500,  0.001831054687500,  0.002563476562500,  0.001342773437500,  0.001647949218750,  0.002136230468750};
   for(int i = 0; i < EQbins; i++){
     //uint32_t x = _max(noisethresh[i], EQmins[i]);
     //uint32_t y = _max(mintops[i], );
@@ -277,16 +284,17 @@ void EQprintone(uint8_t target){
   Serial.println();
 }
 
-void EQprintall(){
-  /*
+void EQprintallbuff(){
   for(int i = 0; i < EQbins; i++){
-    Serial.print(EQbuff[i]);
-    Serial.print(", ");
-  }*/
+    Serial.print(EQbuff[i], 6);
+    if(i < EQbins -1) Serial.print(", ");
+  }
+  Serial.println();
+}
 
+void EQprintallscaled(){
   for(int i = 0; i < EQbins; i++){
-    Serial.print(EQscaled[i]);
-    Serial.print(" ");
+    Serial.printf("%2d ", EQscaled[i]);
   }
   Serial.println();
 }
@@ -449,18 +457,21 @@ void EQproc(bool calib){
   EQupdatevalues();
 }
 
-void EQproc(bool printmany, bool printone, uint8_t target){
+void EQproc(byte printmany, bool printone, uint8_t target){
   EVERY_N_MILLIS(EQreadint){
     EQdofft();          // get data
+    if(printmany == 1){
+      EQprintallbuff();       // print raw data for all bands
+    }
     EQstats();          // do the math
     EQnoisegate();      // apply filters
     EQupdatevalues();
     EQbeatDetection();  // find beat
     EQbeatBuckets();    // also find beat, i guess
     //EQbeatBlink();    // basic blink on builtinled
-    EVERY_N_MILLIS(500){
-      if(printmany == true){
-        EQprintall();       // print raw data for all bands
+    EVERY_N_MILLIS(100){
+      if(printmany == 2){
+        EQprintallscaled();       // print raw data for all bands
       }
       if(printone == true){
         EQprintone(target); // print detailed output for a single band

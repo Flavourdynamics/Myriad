@@ -68,7 +68,7 @@ class Myriad_EQ {
     void beatBuckets();
     void calibration();   // Calibrate values for noisethresh() gate function
     void proc();
-    void proc(bool); // calibration overload
+    void proc(bool); // overload for calibration
     void proc(bool, bool, bool, uint8_t); // (calibrate, printall, printone, target)
 
     // Actual usable output
