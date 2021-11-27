@@ -4,17 +4,35 @@
 #include <SPI.h>
 #include <SD.h>
 #include <SerialFlash.h>
-AudioInputI2S       i2s; // BCLK 21, MCLK 23, (RX/DOUT) 8, LRCLK 20
-AudioInputAnalog    adc; // Default 16/A2
+#include <EEPROM.h>
+
+//#define FFTanalog // Analog Microphone
+#define FFTi2s // I2S Microphone
+//#define FFT256
+#define FFT1024
+ 
 AudioMixer4         mixer;
-AudioAnalyzeFFT1024  FFT;
-//AudioAnalyzeFFT256  FFT;
-AudioConnection     patchCord1(adc, 0, mixer, 0);
-//AudioConnection     patchCord1(i2s, 0, mixer, 0);
-//AudioConnection     patchCord2(i2s, 1, mixer, 1);
+#ifdef FFTi2s
+  AudioInputI2S       i2s; // BCLK 21, MCLK 23, (RX/DOUT) 8, LRCLK 20
+  AudioConnection     patchCord1(i2s, 0, mixer, 0);
+  AudioConnection     patchCord2(i2s, 1, mixer, 1);
+#endif
+#ifdef FFTanalog
+  AudioInputAnalog    adc; // Default 16/A2
+  AudioConnection     patchCord1(adc, 0, mixer, 0);
+  AudioConnection     patchCord2(adc, 1, mixer, 1);
+#endif
+#ifdef FFT256
+  AudioAnalyzeFFT256  FFT;
+#endif
+#ifdef FFT1024
+  AudioAnalyzeFFT1024  FFT;
+#endif
 AudioConnection     patchCord3(mixer, 0, FFT, 0);
 
 float fftdata[EQbins];
+uint32_t sampleruntime = 1000; // How many samples to take during calibration
+
 // Usable output
 uint16_t EQscaled[EQbins];      // EQ values scaled to LEDper
 uint16_t EQ10000scaled[EQbins];   // EQ values scaled to 1000
@@ -23,10 +41,9 @@ uint16_t EQsummed10000;
 // Beat output
 uint8_t EQbeatDetected[EQbins];
 bool EQbeat;
-// FFT parameters
-float EQpeak[EQbins];              // The length of these arrays must be >= NUM_BANDS
-float EQnoisecutoff[EQbins];
-// FFT Buffers and boundaries
+// FFT Buffers and bo// FFT parameters
+float EQnoisefloor[EQbins];
+float EQmintops[EQbins];
 float EQbuff[EQbins];    // Input buffer collects data directly from the FFT
 float EQdecay[EQbins];   // Version of FFT data that 
 float EQmaxes[EQbins];   // A moving maxiumum for each FFT band
@@ -80,13 +97,24 @@ extern bool ledState;
 
 void EQsetup(){
   AudioMemory(12);
-  mixer.gain(0, 2);
-  mixer.gain(1, 2);
-  //FFT.windowFunction(AudioWindowHanning256);
-  FFT.windowFunction(AudioWindowBlackmanHarris256);
-  //FFT.windowFunction(AudioWindowHanning1024);
-  //FFT.windowFunction(AudioWindowBlackmanHarris1024);
-  FFT.averageTogether(50);
+  //mixer.gain(0, 1);
+  //mixer.gain(1, 1);
+
+  // Get calibrated noise floor and mintops from non-volatile EEPROM
+  for (uint16_t i = 0; i < EQbins; i++){
+    EEPROM.get(i*2, EQnoisefloor[i]);
+    EEPROM.get(i*2, EQmintops[i]);
+  }
+
+  #ifdef FFT256
+    //FFT.windowFunction(AudioWindowHanning256);
+    FFT.windowFunction(AudioWindowBlackmanHarris256);
+    FFT.averageTogether(50);
+  #endif
+  #ifdef FFT1024
+    //FFT.windowFunction(AudioWindowHanning1024);
+    FFT.windowFunction(AudioWindowBlackmanHarris1024);
+  #endif
 }
 #ifdef ESP32
 void EQdofft(){
@@ -184,33 +212,42 @@ void EQdofft(){
 #ifdef TEENSY
 void EQdofft(){
   for(uint16_t i = 0; i < EQbins; i++){
-    uint16_t binDelta = fftindex1024[i*2];
-    //uint16_t binDelta = fftindex256[i*2];
+    #ifdef FFT256
+      uint16_t binDelta = fftindex256[i*2];
+    #endif
+    #ifdef FFT1024
+      uint16_t binDelta = fftindex1024[i*2];
+    #endif
     EQbuff[i] = FFT.read(binDelta, binDelta+1);
   }
 }
 #endif
 
-// Mins:  0.331848144531250,  0.000122070312500,  0.000000000000000,  0.000061035156250,  0.000122070312500,  0.000915527343750,  0.000122070312500,  0.000061035156250,  0.000122070312500,  0.000122070312500,  0.000000000000000,  0.000000000000000,  0.000061035156250,  0.000061035156250
-// Maxes:  0.382812500000000,  0.267272949218750,  0.285217285156250,  0.187377929687500,  0.057800292968750,  0.048522949218750,  0.034667968750000,  0.015991210937500,  0.016113281250000,  0.008361816406250,  0.011413574218750,  0.004821777343750,  0.001770019531250,  0.000671386718750
 void EQnoisegate(){
   extern const uint16_t LEDper;      // I can't seem to pass the LEDper define from config to this library
 
-  float noisethresh[EQbins] = {0.539001464843750,  0.282653808593750,  0.069396972656250,  0.000366210937500,  0.000305175781250,  0.000244140625000,  0.000244140625000,  0.001892089843750,  0.000183105468750,  0.000183105468750,  0.000122070312500,  0.000122070312500,  0.000000000000000,  0.000000000000000};
-  float mintops[EQbins] =     {0.146667480468750,  0.085449218750000,  0.028625488281250,  0.004211425781250,  0.002197265625000,  0.001831054687500,  0.002624511718750,  0.000976562500000,  0.000244140625000,  0.000183105468750,  0.000061035156250,  0.000244140625000,  0.000000000000000,  0.000000000000000};
-  //float noisethresh[EQbins] = {0.063232421875000,  0.000122070312500,  0.000122070312500,  0.000122070312500,  0.000122070312500,  0.000122070312500,  0.000000000000000,  0.000000000000000,  0.000061035156250,  0.000061035156250,  0.000000000000000,  0.000000000000000,  0.000000000000000,  0.000000000000000};
-  //float mintops[EQbins] =     {0.096313476562500,  0.020080566406250,  0.019653320312500,  0.013305664062500,  0.008850097656250,  0.011352539062500,  0.005615234375000,  0.008605957031250,  0.001831054687500,  0.001831054687500,  0.002563476562500,  0.001342773437500,  0.001647949218750,  0.002136230468750};
+  // 1024 Adafruit
+  //float noisefloor[EQbins] = {0.027404785156250,  0.018676757812500,  0.016479492187500,  0.016235351562500,  0.010742187500000,  0.005859375000000,  0.004150390625000,  0.003051757812500,  0.002319335937500,  0.002380371093750,  0.002319335937500,  0.002624511718750,  0.001770019531250,  0.001037597656250};
+  //float mintops[EQbins] =     { 0.066284179687500,  0.060791015625000,  0.057189941406250,  0.050842285156250,  0.034362792968750,  0.028076171875000,  0.019897460937500,  0.009948730468750,  0.005493164062500,  0.009094238281250,  0.005554199218750,  0.005859375000000,  0.005310058593750,  0.006408691406250};
+  
+  // 1024 Randanalog
+  //float noisefloor[EQbins] = {};
+  //float mintops[EQbins] =     {};
+  
+  // 1024 I2S
+  //float noisefloor[EQbins] = {0.046447753906250,  0.029479980468750,  0.029602050781250,  0.031677246093750,  0.019287109375000,  0.011352539062500,  0.005004882812500,  0.004943847656250,  0.001220703125000,  0.001953125000000,  0.003234863281250,  0.001586914062500,  0.002807617187500,  0.001403808593750};
+  //float mintops[EQbins] =     {0.064514160156250,  0.051330566406250,  0.047119140625000,  0.045227050781250,  0.025390625000000,  0.015136718750000,  0.006896972656250,  0.007141113281250,  0.002197265625000,  0.002746582031250,  0.004028320312500,  0.001953125000000,  0.003784179687500,  0.001892089843750};
   for(int i = 0; i < EQbins; i++){
-    //uint32_t x = _max(noisethresh[i], EQmins[i]);
+    //uint32_t x = _max(noisefloor[i], EQmins[i]);
     //uint32_t y = _max(mintops[i], );
-    float a = _max(noisethresh[i], EQmins[i]);             // Use the highest min value coded or caluclated
+    float a = _max(EQnoisefloor[i], EQmins[i]);             // Use the highest min value coded or caluclated
     float x = _max(a, 0); // Use the highest min value coded, calculated, or 2.5 std devs away from average  uint32_t x = max(a, (EQaverage[i] - (2.5 *EQstDev[i]))); // Use the highest min value coded, calculated, or 2.5 std devs away from average
-    float b = _max(mintops[i], EQmaxes[i]);                // Use the highest max value coded or calculated
+    float b = _max(EQmintops[i], EQmaxes[i]);                // Use the highest max value coded or calculated
     float y = _max(b, (EQaverage[i] + (2.5 *EQstDev[i]))); // Use the highest max value coded, calculated, or 2.5 std devs away from average
     //uint32_t z = _max(EQbuff[i], EQdecay[i]);
     float z = _max(EQbuff[i], 0);
 
-    if(z >= noisethresh[i]){
+    if(z >= EQnoisefloor[i]){
       EQscaled[i] = map(z, x, y, 0, LEDper);  //(input, inmin, inmax, outmin, outmax)
       EQ10000scaled[i] = map(z, x, y, 0, 10000);
       EQsummed10000 += EQ10000scaled[i];
@@ -267,6 +304,25 @@ void EQupdatevalues(){
     }
   }
 }
+/*
+// 0 = print raw buffer, 1
+void EQprintselector(uint8_t target){
+  switch (target){
+  case 0:
+   
+    break;
+
+  case 1:
+  
+    break;
+
+  case 2:
+    break;
+
+  case 3:
+    break;
+  }
+}*/
 
 void EQprintone(uint8_t target){
   Serial.print("EQbuff: ");
@@ -295,6 +351,13 @@ void EQprintallbuff(){
 void EQprintallscaled(){
   for(int i = 0; i < EQbins; i++){
     Serial.printf("%2d ", EQscaled[i]);
+  }
+  Serial.println();
+}
+
+void EQprintflatdecline(){
+  for(int i = 0; i < EQbins; i++){
+    Serial.printf("%2d ", EQflatdecline[i]);
   }
   Serial.println();
 }
@@ -375,23 +438,23 @@ void EQbeatBuckets(){
   }
 }
 
-void EQcalibration(){   // Calibrate values for noisethresh() gate function
+void EQcalibration(){   // Calibrate values for noisefloor() gate function
   if (millis() > 5000){   // Wait 5 seconds before running to allow electrical and mechanical noise to settle
     static uint32_t calibcounter;   // Persistent counter for sampling run
-    uint32_t sampleruntime = 3000; // How many samples to take
     static bool initmins = false;    // Have to set a flag to initialize the maximum values to something high
-    static float calibmins[EQbins];   // Store minimum values  
+    static float calibmins[EQbins];   // Store minimum values
+    static float calibmaxes[EQbins];    // Store maxiumum values
     calibcounter++;     // Increase the counter
-    if(initmins == false){     
+    if(initmins == false){
+      Serial.println("Beginning calibration. First, set noise floor by being silent until notified.");
       for (uint8_t i = 0; i < EQbins; i++){
         calibmins[i] = 3.4028235E+38f;      // Initialize all mins to highest possible value
       }   
       initmins = true;               // Only initialize once
     }
-    static float calibmaxes[EQbins];    // Store maxiumum values
 
-    // Gather data
-    if(calibcounter < sampleruntime){
+    // Gather noise floor data
+    if(calibcounter < sampleruntime/2){
       for(uint8_t i = 0; i < EQbins; i++){
         if(EQbuff[i] < calibmins[i]){   // If read value is below current minimum
           calibmins[i] = EQbuff[i];     // Set that value to new minimum
@@ -400,29 +463,53 @@ void EQcalibration(){   // Calibrate values for noisethresh() gate function
           calibmaxes[i] = EQbuff[i];
         }
       }
-      EVERY_N_MILLIS(1000){
-        Serial.print("Calibration listen. Sample: ");
-        Serial.println(calibcounter);
+    }
+    // Save noise floor data to 
+    if (calibcounter == sampleruntime/2){
+      Serial.println("Noise floor saved to EEPROM");
+      for (uint16_t i = 0; i < EQbins; i++){
+        Serial.print(EEPROM.put(i*2, calibmaxes[i]), 16);
+        if (i < (EQbins -1)) Serial.print(", ");
+      }
+      Serial.println();
+      Serial.println("Make a moderate amount of noise to set minimum noise peaks.");
+      delay(3000);
+    }
+    // Gather min peak data
+    if(calibcounter > sampleruntime/2 && calibcounter < sampleruntime){
+      for(uint8_t i = 0; i < EQbins; i++){
+        if(EQbuff[i] < calibmins[i]){   // If read value is below current minimum
+          calibmins[i] = EQbuff[i];     // Set that value to new minimum
+        }
+        if(EQbuff[i] > calibmaxes[i]){
+          calibmaxes[i] = EQbuff[i];
+        }
       }
     }
-    // Print data
-    if(calibcounter >= sampleruntime){    // If we've taken enough samples
+    // Save min peaks
+    if (calibcounter == sampleruntime){
+      Serial.println("Min peaks saved to EEPROM");
+      for (uint16_t i = 0; i < EQbins; i++){
+        Serial.print(EEPROM.put(i*4+EQbins*20, calibmaxes[i]), 16);
+        if (i < (EQbins -1)) Serial.print(", ");
+      }
+      Serial.println();
+      Serial.println("Sampling complete");
+    }
+
+    // Save to EEPROM and print to serial
+    if(calibcounter > sampleruntime){
       EVERY_N_MILLIS(1000){
-        Serial.print("// Mins:");
-        for(uint8_t i = 0; i < EQbins; i++){    // Print the mins
-          Serial.print("  ");
-          //Serial.print(i);
-          Serial.print(calibmins[i],16);
-          Serial.print(",");   
+        Serial.println("Noise floor from EEPROM");
+        for (uint16_t i = 0; i < EQbins; i++){
+          Serial.print(EEPROM.get(i*2, calibmaxes[i]), 16);
+          if (i < (EQbins -1)) Serial.print(", ");
         }
         Serial.println();
-
-        Serial.print("// Maxes:");
-        for(uint8_t i = 0; i < EQbins; i++){    // Print the maxes
-          Serial.print("  ");
-          //Serial.print(i);
-          Serial.print(calibmaxes[i],16);
-          Serial.print(",");
+        Serial.println("Minimum peaks from EEPROM");
+        for (uint16_t i = 0; i < EQbins; i++){
+          Serial.print(EEPROM.get(i*4+EQbins*20, calibmaxes[i]), 16);
+          if (i < (EQbins -1)) Serial.print(", ");
         }
         Serial.println();
       }
@@ -469,13 +556,14 @@ void EQproc(byte printmany, bool printone, uint8_t target){
     EQbeatDetection();  // find beat
     EQbeatBuckets();    // also find beat, i guess
     //EQbeatBlink();    // basic blink on builtinled
-    EVERY_N_MILLIS(100){
-      if(printmany == 2){
-        EQprintallscaled();       // print raw data for all bands
-      }
-      if(printone == true){
-        EQprintone(target); // print detailed output for a single band
-      }
+    if(printmany == 2){
+      EQprintallscaled();       // print raw data for all bands
+    }
+    if(printmany == 3){
+      EQprintflatdecline();       // print raw data for all bands
+    }
+    if(printone == true){
+      EQprintone(target); // print detailed output for a single band
     }
   }
 }

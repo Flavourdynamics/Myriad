@@ -12,6 +12,8 @@
 #define EQdeclineint   5  // How often to flat decline data
 
 extern float fftdata[];
+extern uint32_t sampleruntime;
+
 // Usable output
 extern uint16_t EQscaled[];      // EQ values scaled to LEDper
 extern uint16_t EQ10000scaled[];   // EQ values scaled to 1000
@@ -20,10 +22,10 @@ extern uint16_t EQsummed10000;
 // Beat output
 extern uint8_t EQbeatDetected[];
 extern bool EQbeat;
-// FFT parameters
-extern float EQpeak[];              // The length of these arrays must be >= NUM_BANDS
-extern float EQnoisecutoff[];
 // FFT Buffers and boundaries
+// FFT parameters
+extern float EQnoisefloor[EQbins];
+extern float EQmintops[EQbins];
 extern float EQbuff[];    // Input buffer collects data directly from the FFT
 extern float EQdecay[];   // Version of FFT data that 
 extern float EQmaxes[];   // A moving maxiumum for each FFT band
