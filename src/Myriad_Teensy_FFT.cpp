@@ -31,7 +31,7 @@ AudioMixer4         mixer;
 AudioConnection     patchCord3(mixer, 0, FFT, 0);
 
 float fftdata[EQbins];
-uint32_t sampleruntime = 1000; // How many samples to take during calibration
+//uint32_t sampleruntime = 1000; // How many samples to take during calibration
 
 // Usable output
 uint16_t EQscaled[EQbins];      // EQ values scaled to LEDper
@@ -101,10 +101,18 @@ void EQsetup(){
   //mixer.gain(1, 1);
 
   // Get calibrated noise floor and mintops from non-volatile EEPROM
+  Serial.println("Getting noise floor from EEPROM:");
   for (uint16_t i = 0; i < EQbins; i++){
-    EEPROM.get(i*2, EQnoisefloor[i]);
-    EEPROM.get(i*2, EQmintops[i]);
+    Serial.print(EEPROM.get(i*4, EQnoisefloor[i]), 16);
+    if (i < (EQbins -1)) Serial.print(", ");
   }
+  Serial.println();
+  Serial.println("Getting min peaks from EEPROM:");
+  for (uint16_t i = 0; i < EQbins; i++){
+    Serial.print(EEPROM.get(i*4+EQbins*20, EQmintops[i]), 16);
+    if (i < (EQbins -1)) Serial.print(", ");
+  }
+  Serial.println();
 
   #ifdef FFT256
     //FFT.windowFunction(AudioWindowHanning256);
@@ -440,13 +448,15 @@ void EQbeatBuckets(){
 
 void EQcalibration(){   // Calibrate values for noisefloor() gate function
   if (millis() > 5000){   // Wait 5 seconds before running to allow electrical and mechanical noise to settle
-    static uint32_t calibcounter;   // Persistent counter for sampling run
+    // Counter for sampling run triggers each of the 5 phases:
+    // Gather data for noise floor -> save noise floor -> gather data for min peaks -> save min peaks -> print info
+    static uint32_t calibcounter;   
     static bool initmins = false;    // Have to set a flag to initialize the maximum values to something high
     static float calibmins[EQbins];   // Store minimum values
     static float calibmaxes[EQbins];    // Store maxiumum values
     calibcounter++;     // Increase the counter
     if(initmins == false){
-      Serial.println("Beginning calibration. First, set noise floor by being silent until notified.");
+      Serial.println("Beginning calibration. \nFirst, set noise floor by being silent until notified.");
       for (uint8_t i = 0; i < EQbins; i++){
         calibmins[i] = 3.4028235E+38f;      // Initialize all mins to highest possible value
       }   
@@ -464,11 +474,11 @@ void EQcalibration(){   // Calibrate values for noisefloor() gate function
         }
       }
     }
-    // Save noise floor data to 
-    if (calibcounter == sampleruntime/2){
+    // Save noise floor data to EEPROM
+    else if (calibcounter == sampleruntime/2){
       Serial.println("Noise floor saved to EEPROM");
       for (uint16_t i = 0; i < EQbins; i++){
-        Serial.print(EEPROM.put(i*2, calibmaxes[i]), 16);
+        Serial.print(EEPROM.put(i*4, calibmaxes[i]), 16);
         if (i < (EQbins -1)) Serial.print(", ");
       }
       Serial.println();
@@ -476,7 +486,7 @@ void EQcalibration(){   // Calibrate values for noisefloor() gate function
       delay(3000);
     }
     // Gather min peak data
-    if(calibcounter > sampleruntime/2 && calibcounter < sampleruntime){
+    else if(calibcounter > sampleruntime/2 && calibcounter < sampleruntime){
       for(uint8_t i = 0; i < EQbins; i++){
         if(EQbuff[i] < calibmins[i]){   // If read value is below current minimum
           calibmins[i] = EQbuff[i];     // Set that value to new minimum
@@ -487,7 +497,7 @@ void EQcalibration(){   // Calibrate values for noisefloor() gate function
       }
     }
     // Save min peaks
-    if (calibcounter == sampleruntime){
+    else if (calibcounter == sampleruntime){
       Serial.println("Min peaks saved to EEPROM");
       for (uint16_t i = 0; i < EQbins; i++){
         Serial.print(EEPROM.put(i*4+EQbins*20, calibmaxes[i]), 16);
@@ -496,23 +506,21 @@ void EQcalibration(){   // Calibrate values for noisefloor() gate function
       Serial.println();
       Serial.println("Sampling complete");
     }
-
-    // Save to EEPROM and print to serial
-    if(calibcounter > sampleruntime){
-      EVERY_N_MILLIS(1000){
-        Serial.println("Noise floor from EEPROM");
-        for (uint16_t i = 0; i < EQbins; i++){
-          Serial.print(EEPROM.get(i*2, calibmaxes[i]), 16);
-          if (i < (EQbins -1)) Serial.print(", ");
-        }
-        Serial.println();
-        Serial.println("Minimum peaks from EEPROM");
-        for (uint16_t i = 0; i < EQbins; i++){
-          Serial.print(EEPROM.get(i*4+EQbins*20, calibmaxes[i]), 16);
-          if (i < (EQbins -1)) Serial.print(", ");
-        }
-        Serial.println();
+    /////////////////////// Save to EEPROM and print to serial ////////////////////////////////
+    else if(calibcounter  ==  sampleruntime+1){
+      Serial.println("Calibration complete. The following values are saved to EEPROM");
+      Serial.println("Noise floor from EEPROM");
+      for (uint16_t i = 0; i < EQbins; i++){
+        Serial.print(EEPROM.get(i*4, EQnoisefloor[i]), 16);
+        if (i < (EQbins -1)) Serial.print(", ");
       }
+      Serial.println();
+      Serial.println("Minimum peaks from EEPROM");
+      for (uint16_t i = 0; i < EQbins; i++){
+        Serial.print(EEPROM.get(i*4+EQbins*20, EQmintops[i]), 16);
+        if (i < (EQbins -1)) Serial.print(", ");
+      }
+      Serial.println();
     }
   }
 }

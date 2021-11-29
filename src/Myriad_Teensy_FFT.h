@@ -10,9 +10,10 @@
 #define EQsamples      256    // Must be a power of 2
 #define EQreadint      50 // How often data is gathered and processed
 #define EQdeclineint   5  // How often to flat decline data
+#define sampleruntime 3000
 
 extern float fftdata[];
-extern uint32_t sampleruntime;
+//extern uint32_t sampleruntime;
 
 // Usable output
 extern uint16_t EQscaled[];      // EQ values scaled to LEDper
