@@ -1,11 +1,11 @@
 #ifndef Myriad_Time_h
 #define Myriad_Time_h
 #ifdef ESP32
-#include <Arduino.h>
-#include <time.h>
-#ifndef FASTLED_VERSION
-  #include <FastLED_Timers.h>
-#endif
+  #include <Arduino.h>
+  #include <time.h>
+  #ifndef FASTLED_VERSION
+    #include <FastLED_Timers.h>
+  #endif
 
 class Myriad_Time {
   private:
@@ -29,5 +29,5 @@ class Myriad_Time {
 
     void sleepcheck();
 };
-#endif
+  #endif
 #endif
