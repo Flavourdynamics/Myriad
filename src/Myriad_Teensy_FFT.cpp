@@ -8,8 +8,8 @@
 
 //#define FFTanalog // Analog Microphone
 #define FFTi2s // I2S Microphone
-//#define FFT256
-#define FFT1024
+#define FFT256
+//#define FFT1024
  
 AudioMixer4         mixer;
 #ifdef FFTi2s
@@ -18,7 +18,8 @@ AudioMixer4         mixer;
   AudioConnection     patchCord2(i2s, 1, mixer, 1);
 #endif
 #ifdef FFTanalog
-  AudioInputAnalog    adc; // Default 16/A2
+  AudioInputI2S       i2s; // BCLK 21, MCLK 23, (RX/DOUT) 8, LRCLK 20
+  AudioInputAnalog    adc(A2); // Default 16/A2
   AudioConnection     patchCord1(adc, 0, mixer, 0);
   AudioConnection     patchCord2(adc, 1, mixer, 1);
 #endif
@@ -58,7 +59,9 @@ uint16_t EQbeatIntervalOld[EQbins];
 uint16_t EQconstantBeatCounter[EQbins];
 //elapsedMillis EQbeatTimer[EQbins];
 const uint8_t ledPin = 25;
+extern bool ledState;
 bool ledState;
+uint16_t fftindex[EQbins*2];
 
 uint16_t fftindex256[] = {
   0,0,
@@ -93,10 +96,9 @@ uint16_t fftindex1024[] = {
   184,511,
 };
 
-extern bool ledState;
-
 void EQsetup(){
   AudioMemory(12);
+  EQcalcbins();
   //mixer.gain(0, 1);
   //mixer.gain(1, 1);
 
@@ -117,7 +119,7 @@ void EQsetup(){
   #ifdef FFT256
     //FFT.windowFunction(AudioWindowHanning256);
     FFT.windowFunction(AudioWindowBlackmanHarris256);
-    FFT.averageTogether(50);
+    FFT.averageTogether(1);
   #endif
   #ifdef FFT1024
     //FFT.windowFunction(AudioWindowHanning1024);
@@ -221,12 +223,13 @@ void EQdofft(){
 void EQdofft(){
   for(uint16_t i = 0; i < EQbins; i++){
     #ifdef FFT256
-      uint16_t binDelta = fftindex256[i*2];
+      //uint16_t binDelta = fftindex256[i*2];
+      EQbuff[i] = FFT.read(fftindex256[i*2], fftindex256[i*2+1]);
     #endif
     #ifdef FFT1024
-      uint16_t binDelta = fftindex1024[i*2];
+      //uint16_t binDelta = fftindex1024[i*2];
+      EQbuff[i] = FFT.read(fftindex1024[i*2], fftindex1024[i*2+1]);
     #endif
-    EQbuff[i] = FFT.read(binDelta, binDelta+1);
   }
 }
 #endif
@@ -522,6 +525,56 @@ void EQcalibration(){   // Calibrate values for noisefloor() gate function
       }
       Serial.println();
     }
+  }
+}
+
+float EQfindE(int bands, int bins) {
+  float increment=0.1, eTest, n;
+  int b, count, d;
+
+  for (eTest = 1; eTest < bins; eTest += increment) {     // Find E through brute force calculations
+    count = 0;
+    for (b = 0; b < bands; b++) {                         // Calculate full log values
+      n = pow(eTest, b);
+      d = int(n + 0.5);
+      count += d;
+    }
+    if (count > bins) {     // We calculated over our last bin
+      eTest -= increment;   // Revert back to previous calculation increment
+      increment /= 10.0;    // Get a finer detailed calculation & increment a decimal point lower
+    }
+    else
+      if (count == bins)    // We found the correct E
+        return eTest;       // Return calculated E
+    if (increment < 0.0000001)        // Ran out of calculations. Return previous E. Last bin will be lower than (bins-1)
+      return (eTest - increment);
+  }
+  return 0;                 // Return error 0
+}
+
+void EQcalcbins(){ // Calculates the boundaries of each EQbin with EQbins, and EQ samples
+  float e, n;
+  int b, count=0, d;  // bands is EQ bins and bins is EQ samples 
+
+  e = EQfindE(EQbins, EQsamples);         // Find calculated E value
+  if (e) {                                // If a value was returned continue
+    Serial.printf("E = %4.4f\n", e);      // Print calculated E value
+    for (b = 0; b < EQbins; b++) {         // Test and print the bins from the calculated E
+      n = pow(e, b);
+      d = int(n + 0.5);
+      fftindex[b*2] = count;
+      Serial.print(fftindex[b*2]);
+      Serial.print(", ");
+      //Serial.printf( "%4d ", count);      // Print low bin
+      count += d - 1;
+      fftindex[b*2+1] = count;
+      Serial.println(fftindex[b*2+1]);
+      //Serial.printf( "%4d\n", count);     // Print high bin
+      ++count;
+    }
+  }
+  else {
+    Serial.println("Error\n");            // Error, something is wrong with 'e'
   }
 }
 

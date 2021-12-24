@@ -32,7 +32,7 @@ DEFINE_GRADIENT_PALETTE( Purple_Cascade ){ //GRB
   120,  155, 0, 255,   //purple
   235,  255, 0, 40,   //crimson
   255,  255, 255, 255 }; //full white
- 
+
 DEFINE_GRADIENT_PALETTE( Blackwhite ){
     0,    0, 0, 0,
   127,    0, 0, 0,
@@ -164,9 +164,37 @@ DEFINE_GRADIENT_PALETTE(Pastel){
 };
 
 DEFINE_GRADIENT_PALETTE(CloudColors){
-  0,     0,   0,   255,
-  128, 255,   255,   255,
+  0,    0,   0, 255,    // Blue
+  21,   0,   0, 139,    // DarkBlue
+  42,   0,   0, 255,    // Blue
+  66, 135, 206, 250,     // LightSkyBlue
+  88,   0,   0, 139,    // DarkBlue
+  110, 135, 206, 235,    // SkyBlue
+  132,   0,   0, 255,    // Blue
+  154,   0,   0, 139,    // DarkBlue
+  176, 135, 206, 235,    // SkyBlue
+  198, 173, 216, 230,    // LightBlue
+  220, 255, 255, 255,    // White
+  255, 135, 206, 235,    // SkyBlue
 };
+
+// 0,     0,   0,   255,    // Blue
+//  128, 255,   255,   255, // White
+
+/*
+  0,   0,   0, 255,    // Blue
+  0,   0,   0, 139,    // DarkBlue
+  0,   0,   0, 255,    // Blue
+  0, 135, 206, 250     // LightSkyBlue
+  0,   0,   0, 139,    // DarkBlue
+  0, 135, 206, 235,    // SkyBlue
+  0,   0,   0, 255,    // Blue
+  0,   0,   0, 139,    // DarkBlue
+  0, 135, 206, 235,    // SkyBlue
+  0, 173, 216, 230,    // LightBlue
+  0, 255, 255, 255,    // White
+  0, 135, 206, 235,    // SkyBlue
+*/
 
 DEFINE_GRADIENT_PALETTE(Matrix){
   0, 65, 255, 9,

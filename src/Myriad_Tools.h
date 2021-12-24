@@ -97,10 +97,15 @@ void patchangeproc(int newpatnum){ // Every time you switch patterns run this to
   rowcount[1] = 0;
   colcount[0] = colcount[1];    // new pattern is 1, because it is TRUE with newPL
   colcount[1] = 0;
-  //uint8_t noisesize = sizeof(noise[0]);
+  uint16_t noisesize = sizeof(noise[0]);
   //for (uint16_t i = 0; i < numnoise; i++){
-  //  memcpy(noise[0], noise[1], noisesize);
+  memcpy(&noise[0], &noise[1], noisesize);
+  memcpy(&targets[0], &targets[1], noisesize);
   //}
+  //target
+  //noise[2][numnoise][2]
+  //target targets[2][numnoise]
+
   count[0] = count[1];
   count[1] = 0;
   hue[0] = hue[1];
@@ -191,7 +196,7 @@ void palettetargeting(TProgmemRGBGradientPalettePtr matchpal) {     // Select wh
     targetPalette = Palette_List[palnum].Palette;
     // Blend towards target
     nblendPaletteTowardPalette( currentPalette, targetPalette, blendspeed); // there are 2, because blendspeed is capped at ~48
-    nblendPaletteTowardPalette( currentPalette, targetPalette, blendspeed);
+    //nblendPaletteTowardPalette( currentPalette, targetPalette, blendspeed);
   }
 }
 
@@ -261,7 +266,11 @@ void crossfader() {  ////////////////////////// Crossfader /////////////////////
 void crossfader() {  ////////////////////////// Crossfader //////////////////////////////////////////
   EVERY_N_MILLIS_I(mainloop, STATEloopinterval){
     if (crossct >= 255) { 
+      // This can be optimized to not copy
       Pattern_List[patternum].Pattern(true, firstbuffer);   // run only newest pattern if crossfading complete
+      for (uint16_t i = 0; i < LEDtotal; i++) {   // blend em
+        writedata[i] = firstbuffer[i];   // Blend arrays of LEDs, third value is blend %
+      }
     }
     else if (crossct < 255) {
       EVERY_N_MILLIS(20) {
@@ -377,7 +386,7 @@ uint32_t Wheel(byte WheelPos) {
   return (wheel);
 }
 
-void wu_pixel(uint32_t x, uint32_t y, CRGB * col) {
+void wu_pixel(uint32_t x, uint32_t y, CRGB * col, CRGB *dest) {
   // extract the fractional parts and derive their inverses
   uint8_t xx = x & 0xff, yy = y & 0xff, ix = 255 - xx, iy = 255 - yy;
   // calculate the intensities for each affected pixel
@@ -387,9 +396,12 @@ void wu_pixel(uint32_t x, uint32_t y, CRGB * col) {
   // multiply the intensities by the colour, and saturating-add them to the pixels
   for (uint8_t i = 0; i < 4; i++) {
     uint16_t xy = XY((x >> 8) + (i & 1), (y >> 8) + ((i >> 1) & 1));
-    writedata[xy].r = qadd8(writedata[xy].r, (col->r * wu[i]) >> 8);
-    writedata[xy].g = qadd8(writedata[xy].g, (col->g * wu[i]) >> 8);
-    writedata[xy].b = qadd8(writedata[xy].b, (col->b * wu[i]) >> 8);
+    //writedata[xy].r = qadd8(writedata[xy].r, (col->r * wu[i]) >> 8);
+    //writedata[xy].g = qadd8(writedata[xy].g, (col->g * wu[i]) >> 8);
+    //writedata[xy].b = qadd8(writedata[xy].b, (col->b * wu[i]) >> 8);
+    dest[xy].r = qadd8(writedata[xy].r, (col->r * wu[i]) >> 8);
+    dest[xy].g = qadd8(writedata[xy].g, (col->g * wu[i]) >> 8);
+    dest[xy].b = qadd8(writedata[xy].b, (col->b * wu[i]) >> 8);
   }
 }
 

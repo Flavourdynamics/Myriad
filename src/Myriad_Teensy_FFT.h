@@ -7,10 +7,10 @@
 #include <Myriad_Types.h>
 #include <Statistic.h>
 #define EQbins         14    // To change this, you will need to change the bunch of if statements describing the mapping from bins to bands
-#define EQsamples      256    // Must be a power of 2
-#define EQreadint      50 // How often data is gathered and processed
-#define EQdeclineint   5  // How often to flat decline data
-#define sampleruntime 3000
+#define EQsamples      256   // Must be a power of 2
+#define EQreadint      10    // How often data is gathered and processed
+#define EQdeclineint   5     // How often to flat decline data
+#define sampleruntime  4500  // 
 
 extern float fftdata[];
 //extern uint32_t sampleruntime;
@@ -41,6 +41,7 @@ extern uint16_t EQconstantBeatCounter[];
 //elapsedMillis EQbeatTimer[EQbins];
 extern const uint8_t ledPin;
 extern bool ledState;
+extern uint16_t fftindex[];
 extern uint16_t fftindex256[];
 extern uint16_t fftindex1024[];
 
@@ -57,6 +58,8 @@ void EQbeatBuckets();
 void EQbeatBlink();
 void EQprintDetectedBeats();
 
+float EQfindE(uint16_t bands, uint16_t bins); // Used for determining FFT binning
+void EQcalcbins();                 // Used 
 void EQcalibration();   // Calibrate values for noisethresh() gate function
 void EQprintone(uint8_t target);
 void EQprintall();
