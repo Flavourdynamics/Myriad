@@ -213,7 +213,6 @@ void Diamondmaw(bool newPL, CRGB *dest){
   patrunproc(newPL, 10, -1, 16, Purple_Cascade);
   for (int col = 0; col < LEDhalfstrips; col++){         // Write each row with start colour and a random saturation    
     for(int row = 0; row < LEDhalfper; row++){
-      
       int standin = beatsin8(14, -5, 25);      // BPM, MIN, MAX
       dest[XY(col, row)] = ColorFromPalette(currentPalette, hue[newPL] - (col+row)*standin, 255, LINEARBLEND);      // Target palette, start hue
       dest[XY(col, LEDper - 1 - row)] = ColorFromPalette(currentPalette, hue[newPL] - (col+row)*standin, 255, LINEARBLEND);
@@ -420,6 +419,20 @@ void Canada(bool newPL, CRGB *dest){
     }
   }
 }
+
+void Staticeye(bool newPL, CRGB *dest){
+  patrunproc(newPL, 255, -1, 16, Newspaper);
+
+  for (int col = 0; col < LEDhalfstrips; col++){         // Write each row with start colour and a random saturation    
+    for(int row = 0; row <LEDhalfper; row++){
+      int standin = beatsin8(20, -1, 1);      // Mess with this to create eye layers and adjust how long it stays at 0, which is the static
+      dest[XY(col, row)] = ColorFromPalette(currentPalette, hue[newPL] + (col*standin*row+row), 255, LINEARBLEND);      // Target palette, start hue
+      dest[XY(col, LEDper - 1 - row)] = ColorFromPalette(currentPalette, hue[newPL] + (col*standin*row+row), 255, LINEARBLEND);
+      dest[XY(LEDstrips - 1 - col, row)] = ColorFromPalette(currentPalette, hue[newPL] + (col*standin*row+row), 255, LINEARBLEND);
+      dest[XY(LEDstrips - 1 - col, LEDper - 1 - row)] = ColorFromPalette(currentPalette, hue[newPL] + (col*standin*row+row), 255, LINEARBLEND);
+    }
+  }
+}
 /*
 void Textualizer(bool newPL, CRGB *dest){
   patrunproc(newPL, 255, 1, 16, Tropicana);
@@ -559,44 +572,29 @@ void Initialization(bool newPL, CRGB *dest){
 }
 void Sinesides(bool newPL, CRGB *dest){
   patrunproc(newPL, 255, 1, 16, Tropicana);
-  CRGBPalette16 palette1 = gilt;
+  // uint8_t altpal = NUMpalettes%palnum;
+  CRGBPalette16 palette1 = Palette_List[altpal];
   CRGBPalette16 palette2 = currentPalette;
 
   for(int y = 0; y < LEDper; y++){ 
-    uint8_t pos = sin8(y*3+hue[z]*3) ;                                               // find wavelength, then have it repeatt several times at a less intense wavelength             uint8_t pos = sin8(hue%25*(y%25))  // or sin8(hue*y/5+y%5*256/5
+    // Find wavelength, then have it repeat several times at a less intense wavelength
+    uint8_t pos = sin8(y*3+hue[newPL]*3);    // uint8_t pos = sin8(hue%25*(y%25))  // or sin8(hue*y/5+y%5*256/5
     byte wavestart = beatsin8(6, 0, 5);
     pos = map(pos, 0, 255, wavestart, LEDstrips-1-wavestart);
-    leds[XY(pos, y)] += CHSV(255, 0, beatsin8(8, 0, 255)+y*2);
+    dest[XY(pos, y)] += CHSV(255, 0, beatsin8(8, 0, 255)+y*2);
     
-    for( int i = 0; i < pos; i++){     
-      leds[XY(i, y)] = ColorFromPalette(palette1, hue[z] + y*7, 255, LINEARBLEND);
+    for( int i = 0; i < pos; i++){
+      dest[XY(i, y)] = ColorFromPalette(palette1, hue[nwePL] + y*7, 255, LINEARBLEND);
     }
     for( int i = LEDstrips -1; i > pos; i--){
-      leds[XY(i, y)] = ColorFromPalette(palette2, 128 - hue[z] + y*7, 255, LINEARBLEND);
+      dest[XY(i, y)] = ColorFromPalette(palette2, 128 - hue[newPL] + y*7, 255, LINEARBLEND);
     }
   }
 }
 
-void Staticeye(bool newPL, CRGB *dest){
-  patrunproc(newPL, 255, -1, 16, Newspaper);
-  
-  for (int col = 0; col < LEDstrips/2; col++){         // Write each row with start colour and a random saturation    
-    for(int row = 0; row <LEDper/2; row++){
-      
-      int standin = beatsin8(20, -1, 1);      // Mess with this to create eye layers and adjust how long it stays at 0, which is the static
-      leds[XY(col, row)] = ColorFromPalette(currentPalette, hue[z] + (col*standin*row+row), 255, LINEARBLEND);      // Target palette, start hue
-      leds[XY(col, LEDper - 1 - row)] = ColorFromPalette(currentPalette, hue[z] + (col*standin*row+row), 255, LINEARBLEND);
-      leds[XY(LEDstrips - 1 - col, row)] = ColorFromPalette(currentPalette, hue[z] + (col*standin*row+row), 255, LINEARBLEND);
-      leds[XY(LEDstrips - 1 - col, LEDper - 1 - row)] = ColorFromPalette(currentPalette, hue[z] + (col*standin*row+row), 255, LINEARBLEND);
-    }
-  }  
-}
-
-
-
 void textdisp(bool newPL, CRGB *dest){
   patrunproc(newPL, 255, 1, 16, Tropicana);
-  
+
   matrix->setTextWrap(false);
   //matrix->setFont( &Roboto_Mono_Medium_24 ); // matrix->setTextSize(size); for defaults
   matrix->setRotation(0);  //change to 1
@@ -623,94 +621,6 @@ void textdisp(bool newPL, CRGB *dest){
   }
 }
 */ ///////////////////////////////////////////////////////////////
-/*
-void Rainbow(bool newPL, CRGB *dest) {
-  palettetargeting(1);
-  uint8_t z = fetcher(18);
-  fill_rainbow( dest, NUM_LEDS, gHue, 7);
-}
-
-void RainbowWithGlitter(bool newPL, CRGB *dest) 
-{
-  // built-in FastLED rainbow, plus some random sparkly glitter
-  rainbow();
-  addGlitter(80);
-}
-
-void addGlitter( fract8 chanceOfGlitter) 
-{
-  if( random8() < chanceOfGlitter) {
-    leds[ random16(NUM_LEDS) ] += CRGB::White;
-  }
-}
-
-void confetti(bool newPL, CRGB *dest) 
-{
-  // random colored speckles that blink in and fade smoothly
-  fadeToBlackBy( leds, NUM_LEDS, 10);
-  int pos = random16(NUM_LEDS);
-  leds[pos] += CHSV( gHue + random8(64), 200, 255);
-}
-
-*/
-/*
-void changingBars(int band, int barHeight) {
-  int xStart = BAR_WIDTH * band;
-  for (int x = xStart; x < xStart + BAR_WIDTH; x++) {
-    for (int y = 0; y < barHeight; y++) {
-      leds[XY(x,y)] = CHSV(y * (255 / kMatrixHeight) + colorTimer, 255, 255); 
-    }
-  }
-}
-
-void centerBars(int band, int barHeight) {
-  int xStart = BAR_WIDTH * band;
-  for (int x = xStart; x < xStart + BAR_WIDTH; x++) {
-    if (barHeight % 2 == 0) barHeight--;
-    int yStart = ((kMatrixHeight - barHeight) / 2 );
-    for (int y = yStart; y <= (yStart + barHeight); y++) {
-      int colorIndex = constrain((y - yStart) * (255 / barHeight), 0, 255);
-      leds[XY(x,y)] = ColorFromPalette(heatPal, colorIndex);
-    }
-  }
-}
-
-void whitePeak(int band) {
-  int xStart = BAR_WIDTH * band;
-  int peakHeight = peak[band];
-  for (int x = xStart; x < xStart + BAR_WIDTH; x++) {
-    leds[XY(x,peakHeight)] = CRGB::White;
-  }
-}
-
-void outrunPeak(int band) {
-  int xStart = BAR_WIDTH * band;
-  int peakHeight = peak[band];
-  for (int x = xStart; x < xStart + BAR_WIDTH; x++) {
-    //leds[XY(x,peakHeight)] = CHSV(peakHeight * (255 / kMatrixHeight), 255, 255);
-    leds[XY(x,peakHeight)] = ColorFromPalette(outrunPal, peakHeight * (255 / kMatrixHeight));
-  }
-}
-
-void waterfall(int band) {
-  int xStart = BAR_WIDTH * band;
-  double highestBandValue = 60000;        // Set this to calibrate your waterfall
-
-  // Draw bottom line
-  for (int x = xStart; x < xStart + BAR_WIDTH; x++) {
-    leds[XY(x,0)] = CHSV(constrain(map(bandValues[band],0,highestBandValue,160,0),0,160), 255, 255);
-  }
-
-  // Move screen up starting at 2nd row from top
-  if (band == NUM_BANDS - 1){
-    for (int y = kMatrixHeight - 2; y >= 0; y--) {
-      for (int x = 0; x < kMatrixWidth; x++) {
-        leds[XY(x,y+1)] = leds[XY(x,y)];
-      }
-    }
-  }
-}
-*/
 
 NamedPattern Pattern_List[] = {
   {(pattern_func)Sinelon,            F("Sinelon")},
@@ -738,6 +648,7 @@ NamedPattern Pattern_List[] = {
   {(pattern_func)Digital_Rain,       F("Digital Rain")},
   //{(pattern_func)Textualizer,   F("Textualizer")},
   {(pattern_func)Canada,             F("Canada")},
+  {(pattern_func)Staticeye,          F("Static Eye")},
 };
 
 uint16_t const NUMpatterns = (sizeof(Pattern_List) / sizeof(Pattern_List[0]));
