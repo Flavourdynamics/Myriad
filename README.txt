@@ -1,6 +1,4 @@
-/*    Myriad is a collection of components for controlling LEDs
-      The focus of this project is to create a platform for controlling sensor driven generative 
-      LED art.
+/*    Myriad is a collection of components for controlling sensor driven generative LED art.
       
       Development is currently split between the Teensy 4.1 driven wearable "Starshroud", and the
       cost effective ESP32 driven "Lampert" for stationary installations. Starshroud is controled by
