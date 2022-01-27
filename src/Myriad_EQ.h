@@ -72,7 +72,7 @@ class Myriad_EQ {
     void proc(bool, bool, bool, uint8_t); // (calibrate, printall, printone, target)
 
     // Actual usable output
-    uint16_t EQscaled[EQbins];      // EQ values scaled to LEDper
+    uint16_t EQscaled[EQbins];      // EQ values scaled to LEDSy
     uint16_t EQ10000scaled[EQbins];   // EQ values scaled to 1000
     uint16_t EQflatdecline[EQbins]; // EQ values that decay at 1 LED every run
     uint16_t EQsummed10000;

@@ -70,15 +70,12 @@ void Myriad_BT::select(){             // or strcpy(STATEloopval, BLEprimary);
   Serial.print("-");
   Serial.println(BTsecondary);
   
-  if (strcmp(BTprimary, "Power") == 0){
+  if (strcmp(BTprimary, "Power")  == 0){
     LEDonoff = !LEDonoff;
     FastLED.clear(true);
   }
   else if (strcmp(BTprimary, "Brightness") == 0){
     LEDtargbright = BTsecondary;
-  }
-  else if (strcmp(BTprimary, "Speed") == 0){
-    STATEloopinterval = BTsecondary;
   }
   else if (strcmp(BTprimary, "PalSpd") == 0){
     STATEpalshuffleinterval = BTsecondary;
@@ -115,9 +112,6 @@ void Myriad_BT::select(){             // or strcpy(STATEloopval, BLEprimary);
   }
   else if (strcmp(BTprimary, "Brightness") == 0){
     LEDtargbright = BTsecondary;
-  }
-  else if (strcmp(BTprimary, "Speed") == 0){
-    STATEloopinterval = BTsecondary;
   }
   else if (strcmp(BTprimary, "PalSpd") == 0){
     STATEpalshuffleinterval = BTsecondary;
@@ -167,37 +161,38 @@ void Myriad_BT::uplist(){
   switch(BTupcount){
     case 0:
       outdata = outdata + "<bright," + LEDcurbright + ">";
-    break;
+      break;
     case 1:
-      outdata = outdata + "<speed," + STATEloopinterval + ">";
-    break;
-    case 2:
       outdata = outdata + "<bpm," + beat + ">";
-    break;
-    case 3:
+      break;
+    case 2:
       outdata = outdata + "<shufint," + STATEpatshuffleinterval + ">";
-    break;
-    case 4:
+      break;
+    case 3:
       outdata = outdata + "<palshuffint," + STATEpalshuffleinterval + ">";
-    break;
-    case 5:
+      break;
+    case 4:
       outdata = outdata + "<fps," + framerate + ">";
-    break;
-    case 6:
+      break;
+    case 5:
       outdata = outdata + "<pattern," + Pattern_List[patternum].Name + ">";
-    break;
-    case 7:
+      break;
+    case 6:
       bipe = patshuffle;
       outdata = outdata + "<patshuftog," + bipe + ">";
-    break;
-    case 8:
+      break;
+    case 7:
       bipe = palshuff;
       outdata = outdata + "<palshuftog," + bipe + ">";
-    break;
-    case 9:
+      break;
+    case 8:
       bipe = palmatch;
       outdata = outdata + "<palmatch," + bipe + ">";
-    break;
+      break;
+    case 9:
+      bipe = palnum;
+      outdata = outdata + "<palnum," + bipe + ">";
+      break;
   }
   BTupcount++;
   if(BTupcount > 9){

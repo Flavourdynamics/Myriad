@@ -18,7 +18,7 @@
     bool patshuffle = false;
     uint16_t noise[30][2];
     uint16_t timer;
-    uint8_t stars[LEDstrips]; // Deprecated, probably
+    uint8_t stars[LEDSx]; // Deprecated, probably
     uint8_t beat = 144;
 */
 
@@ -33,14 +33,14 @@ struct targets target[numtargs][2];
 
 void beach(){
   EVERY_N_MILLIS(50){
-    fadeToBlackBy(leds, LEDtotal, 20);
+    fadeToBlackBy(leds, LEDStotal, 20);
     //fader(20);
     uint8_t z = 1;
     //CRGBPalette16 palette = RainbowColors_p;
     
     for(int bead = 0; bead < 5; bead++){
-      target[bead][z].x = beatsin8( (bead+1) * 4, 0, (LEDstrips)-1);
-      target[bead][z].y = beatsin8( (bead+1) * 3, 0, LEDper - 1);   
+      target[bead][z].x = beatsin8( (bead+1) * 4, 0, (LEDSx)-1);
+      target[bead][z].y = beatsin8( (bead+1) * 3, 0, LEDSy - 1);   
       ledmatrix.DrawFilledCircle(target[bead][z].x, target[bead][z].y, 2, CHSV(hue[z]+bead*15, 255, 255));  // void DrawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, CRGB color)
     }
   }
@@ -50,16 +50,16 @@ void beach(){
 void DNA(){
   uint8_t threads = 4;
   uint8_t phaseoff = 255/threads;
-  for(int y = 0; y < LEDper; y++){ // For each row
+  for(int y = 0; y < LEDSy; y++){ // For each row
     for(uint8_t p = 0; p < threads; p++){                        // p is phase mod, 128 coefficient is 64 degrees out of phase
       // Format: leds[coordinates oscillate between left and right with next lines out of phase] =  CHSV(base hue+difference between rows, saturation changes a little bit for variety, value varies by row)
       // Increase coefficients of 'y' terms to increase the differences between rows
-      //leds[XY(beatsin8(10, 0, LEDstrips-1, 0, y*4+p*phaseoff), y)] = CHSV(-hue+y*5+p*phaseoff, beatsin8(25, 200, 255, 0, y*3), beatsin8(5, 55, 255, 0, y*10+p*phaseoff)); 
+      //leds[XY(beatsin8(10, 0, LEDSx-1, 0, y*4+p*phaseoff), y)] = CHSV(-hue+y*5+p*phaseoff, beatsin8(25, 200, 255, 0, y*3), beatsin8(5, 55, 255, 0, y*10+p*phaseoff)); 
 
-      leds[XY(beatsin8(10, 0, LEDstrips-1, 0, y*4+p*phaseoff), y)] = CHSV(y*5+p*phaseoff-hue, 255, beatsin8(5, 55, 255, 0, y*10+p*phaseoff));                 
+      leds[XY(beatsin8(10, 0, LEDSx-1, 0, y*4+p*phaseoff), y)] = CHSV(y*5+p*phaseoff-hue, 255, beatsin8(5, 55, 255, 0, y*10+p*phaseoff));                 
     }
   }
-  blur( leds, LEDstrips, LEDper, 255);
+  blur( leds, LEDSx, LEDSy, 255);
 }*/
 
 uint8_t menoise[2];
@@ -73,11 +73,11 @@ void midearth(){
   
   menoise[0] = inoise8(menoise[0], timer);           // get some noise
   menoise[0] = constrain(menoise[0], 60, 195);
-  targetto[count0][0] = map(menoise[0], 60, 195, 0, LEDstrips-1);        // Map it to width
+  targetto[count0][0] = map(menoise[0], 60, 195, 0, LEDSx-1);        // Map it to width
 
   menoise[1] = inoise8(menoise[1], timer*2); 
   menoise[1] = constrain(menoise[1], 60, 195);
-  targetto[count0][1] = map(menoise[1], 60, 195, 0, LEDper-1);
+  targetto[count0][1] = map(menoise[1], 60, 195, 0, LEDSy-1);
   
   for(byte i = items + 1; i > 1; i--){
     //target[rollover][0], targetto[rollover][1]
@@ -109,11 +109,11 @@ void midearthorig(){
 
   menoise[0] = inoise8(noise[0], timer);           // get some noise
   menoise[0] = constrain(noise[0], 60, 195);
-  target[count][1].x = map(noise[0], 60, 195, 0, LEDstrips-1);        // Map it to width
+  target[count][1].x = map(noise[0], 60, 195, 0, LEDSx-1);        // Map it to width
 
   menoise[1] = inoise8(noise[1], timer*2); 
   menoise[1] = constrain(noise[1], 60, 195);
-  target[count][1].y = map(noise[1], 60, 195, 0, LEDper-1);
+  target[count][1].y = map(noise[1], 60, 195, 0, LEDSy-1);
   
   for(byte i = items+ 1; i > 1; i--){
     //target[rollover][0], target[rollover][1]
@@ -141,12 +141,12 @@ void testillusion(){
   palettetargeting(4);
   uint8_t z = fetcher(4);
   
-  for (int y = 0; y < LEDper/2; y++){
-    for (int x = 0; x <LEDstrips/2; x++){
+  for (int y = 0; y < LEDSy/2; y++){
+    for (int x = 0; x <LEDSx/2; x++){
       leds[XY(x, y)] = ColorFromPalette(currentPalette, hue[z] + x*25 + y*25, 255, LINEARBLEND);                            //top left
-      leds[XY(LEDstrips-1-x, y)] = ColorFromPalette(currentPalette, hue[z] + x*25 + y*25, 255, LINEARBLEND);              //top right
-      leds[XY(x, LEDper-1-y)] = ColorFromPalette(currentPalette, hue[z] + x*25 + y*25, 255, LINEARBLEND);                 //bottom left
-      leds[XY(LEDstrips-1-x, LEDper-1-y)] = ColorFromPalette(currentPalette, hue[z] + x*25 + y*25, 255, LINEARBLEND);   //bottom right 
+      leds[XY(LEDSx-1-x, y)] = ColorFromPalette(currentPalette, hue[z] + x*25 + y*25, 255, LINEARBLEND);              //top right
+      leds[XY(x, LEDSy-1-y)] = ColorFromPalette(currentPalette, hue[z] + x*25 + y*25, 255, LINEARBLEND);                 //bottom left
+      leds[XY(LEDSx-1-x, LEDSy-1-y)] = ColorFromPalette(currentPalette, hue[z] + x*25 + y*25, 255, LINEARBLEND);   //bottom right 
     }
   }
   huepusher(1, z, 16);

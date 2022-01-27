@@ -35,7 +35,7 @@ float fftdata[EQbins];
 //uint32_t sampleruntime = 1000; // How many samples to take during calibration
 
 // Usable output
-uint16_t EQscaled[EQbins];      // EQ values scaled to LEDper
+uint16_t EQscaled[EQbins];      // EQ values scaled to LEDSy
 uint16_t EQ10000scaled[EQbins];   // EQ values scaled to 1000
 uint16_t EQflatdecline[EQbins]; // EQ values that decay at 1 LED every run
 uint16_t EQsummed10000;
@@ -235,7 +235,7 @@ void EQdofft(){
 #endif
 
 void EQnoisegate(){
-  extern const uint16_t LEDper;      // I can't seem to pass the LEDper define from config to this library
+  extern const uint16_t LEDSy;      // I can't seem to pass the LEDSy define from config to this library
 
   // 1024 Adafruit
   //float noisefloor[EQbins] = {0.027404785156250,  0.018676757812500,  0.016479492187500,  0.016235351562500,  0.010742187500000,  0.005859375000000,  0.004150390625000,  0.003051757812500,  0.002319335937500,  0.002380371093750,  0.002319335937500,  0.002624511718750,  0.001770019531250,  0.001037597656250};
@@ -259,7 +259,7 @@ void EQnoisegate(){
     float z = _max(EQbuff[i], 0);
 
     if(z >= EQnoisefloor[i]){
-      EQscaled[i] = map(z, x, y, 0, LEDper);  //(input, inmin, inmax, outmin, outmax)
+      EQscaled[i] = map(z, x, y, 0, LEDSy);  //(input, inmin, inmax, outmin, outmax)
       EQ10000scaled[i] = map(z, x, y, 0, 10000);
       EQsummed10000 += EQ10000scaled[i];
     } else {
@@ -384,7 +384,7 @@ void EQbeatBlink(){
 
 //uint32_t a = (255 - EQ7avg[s])/2; // How much handicapping should be applied based on how low avg is, increase divisor to decrease strength
 //int fq = 255*(log(1+(EQbuff[target]/255)*a)/log(1+a));  // Apply handicapping 
-//EQ7fqamp[s] = map(fq, 0, 255, 0, LEDper - 1);
+//EQ7fqamp[s] = map(fq, 0, 255, 0, LEDSy - 1);
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void EQprintDetectedBeats() {

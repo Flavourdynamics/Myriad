@@ -147,7 +147,7 @@ void Myriad_EQ::beatBlink(){
 
 
 void Myriad_EQ::noisegate(){
-extern const uint16_t LEDper;      // I can't seem to pass the LEDper define from config to this library
+extern const uint16_t LEDSy;      // I can't seem to pass the LEDSy define from config to this library
   uint32_t noisethresh[EQbins] = {3284,  3564,  2383,  2179,  4827,  3844,  3180,  4953,  3376,  4525,  2665,  3322,  2687,  4187};
   uint32_t mintops[EQbins] =     {44277,  20888,  35164,  16594,  27446,  19514,  18645,  14826,  10852,  15894,  20048,  9443,  9684,  9152};
   for(int i = 0; i < EQbins; i++){
@@ -161,7 +161,7 @@ extern const uint16_t LEDper;      // I can't seem to pass the LEDper define fro
     uint32_t z = _max(EQbuff[i], 0);
 
     if(z >= noisethresh[i]){
-      EQscaled[i] = map(z, x, y, 0, LEDper);  //(input, inmin, inmax, outmin, outmax)
+      EQscaled[i] = map(z, x, y, 0, LEDSy);  //(input, inmin, inmax, outmin, outmax)
       EQ10000scaled[i] = map(z, x, y, 0, 10000);
       EQsummed10000 += EQ10000scaled[i];
     } else {
@@ -220,7 +220,7 @@ void Myriad_EQ::stats(){
 
 //uint32_t a = (255 - EQ7avg[s])/2; // How much handicapping should be applied based on how low avg is, increase divisor to decrease strength
 //int fq = 255*(log(1+(EQbuff[target]/255)*a)/log(1+a));  // Apply handicapping 
-//EQ7fqamp[s] = map(fq, 0, 255, 0, LEDper - 1);
+//EQ7fqamp[s] = map(fq, 0, 255, 0, LEDSy - 1);
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Myriad_EQ::printDetectedBeats() {

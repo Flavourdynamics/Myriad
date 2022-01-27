@@ -81,7 +81,7 @@ int16_t count[2];
 bool patshuffle = false;
 uint16_t noise[30][2];
 uint16_t timer;
-uint8_t stars[LEDstrips]; // Deprecated, probably
+uint8_t stars[LEDSx]; // Deprecated, probably
 uint8_t beat = 144;
 
 //State

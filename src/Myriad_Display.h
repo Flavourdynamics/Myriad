@@ -22,7 +22,7 @@ extern uint16_t EQscaled[EQbins];
 void DISPLAYbar(){
   int barwideness = SCREEN_WIDTH/14;
   for(int i = 0; i < EQbins; i++){
-    int barhightness = map(EQscaled[i], 0, LEDper, 0, SCREEN_HEIGHT); 
+    int barhightness = map(EQscaled[i], 0, LEDSy, 0, SCREEN_HEIGHT); 
     display.fillRect(i*barwideness, SCREEN_HEIGHT-barhightness, barwideness-1, barhightness, 1); // void fillRect(uint16_t x0, uint16_t y0, uint16_t width, uint16_t height);  
   }
   //display.display();
@@ -57,7 +57,7 @@ void DISPLAYperiodic(){
   display.print("FPS: ");
   display.print(LEDS.getFPS());
   display.print(" PWR: ");
-  display.println(calculate_unscaled_power_mW(leds, LEDtotal)/5/100);
+  display.println(calculate_unscaled_power_mW(leds, LEDStotal)/5/100);
   //display.drawLogBuffer(0, 0);
   display.display();
 }

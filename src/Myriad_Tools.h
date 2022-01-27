@@ -6,7 +6,7 @@
 extern NamedPattern Pattern_List[];
 extern NamedPalette Palette_List[];
 
-#ifdef Myriad_Prefs
+void SDwriteCSV();
 void peroidictasks(){ // Run every 500ms
   EVERY_N_MILLIS(500){
     random16_add_entropy(analogRead(A5));  
@@ -22,40 +22,25 @@ void peroidictasks(){ // Run every 500ms
     Serial.print("  ---  FPS: ");
     Serial.print(framerate);
     Serial.print("  ---  POWER: ");
-    Serial.println(calculate_unscaled_power_mW(writedata, LEDtotal)/5*LEDcurbright);
-    Prefs.update();
+    Serial.println(calculate_unscaled_power_mW(writedata, LEDStotal)/5*LEDcurbright);
+    #ifdef Myriad_Prefs
+      Prefs.update();
+    #endif
+    #ifdef TEENSY
+    EVERY_N_SECONDS(30){
+      SDwriteCSV();
+    }
+    #endif
   }
 }
-#else
-void peroidictasks(){ // Run every 500ms
-  EVERY_N_MILLIS(500){
-    random16_add_entropy(analogRead(A5));  
-    Serial.print("Pattern: ");
-    Serial.print(Pattern_List[patternum].Name.c_str());
-    Serial.print("  ---  Palette: ");
-    if(palmatch == false){
-      Serial.print(Palette_List[palnum].Name);
-    }
-    else {
-      Serial.print("Match");
-    }
-    Serial.print("  ---  FPS: ");
-    Serial.print(framerate);
-    Serial.print("  ---  POWER: ");
-    Serial.println(calculate_unscaled_power_mW(writedata, LEDtotal)/5*LEDcurbright);
-    //Serial.print("  ---  FREEMEM: ");
-    //Serial.println(ESP.getFreeHeap());
-  }
-}
-#endif
 
 uint16_t XY(uint16_t x, uint16_t y) { // Map XY coordiate to a linear LED address
-  uint16_t LEDaddress = x * LEDper + y;
+  uint16_t LEDaddress = x * LEDSy + y;
   return LEDaddress;
 }
 
 uint16_t XY(uint16_t x, uint16_t y, uint8_t scalor){ // Superscaling XY targeting
-  uint16_t LEDaddress = x * LEDper * scalor + y;
+  uint16_t LEDaddress = x * LEDSy * scalor + y;
   return LEDaddress;
 }
 
@@ -74,21 +59,21 @@ void huepusher(bool newPL, int8_t hueinc,  uint8_t huespeed){ // Advance appropr
 
 void fader(bool newPL, byte fadeval) {  // fades led array by given amount
   if (newPL == true){
-    fadeToBlackBy( firstbuffer, LEDtotal, fadeval);    // fade first array if pattern is new
+    fadeToBlackBy( firstbuffer, LEDStotal, fadeval);    // fade first array if pattern is new
   } else if (newPL == false){
-    fadeToBlackBy( secondbuffer, LEDtotal, fadeval);   // fade second array if pattern is old
+    fadeToBlackBy( secondbuffer, LEDStotal, fadeval);   // fade second array if pattern is old
   }
 }
 
 void blackout(CRGB *targetarray) { // wipes target array
-  for ( int i = 0; i < LEDtotal; i++) {
+  for ( int i = 0; i < LEDStotal; i++) {
     targetarray[i] = CRGB(0, 0, 0);
   }
 }
 
 void patchangeproc(int newpatnum){ // Every time you switch patterns run this to begin crossfading
   blackout(secondbuffer);                           //purge the old buffer
-  memcpy8 (secondbuffer, firstbuffer, LEDtotal);    // copy data from first buffer to second, for continuity
+  memcpy8 (secondbuffer, firstbuffer, LEDStotal);    // copy data from first buffer to second, for continuity
   blackout(firstbuffer);                            // wipe the new buffer for incoming pattern
   crossct = 0;                  // reset the blend amount
   oldpattern = patternum;       // set the current pattern to be the old one so we can make it use the same variables
@@ -228,9 +213,9 @@ void crossfader() {  ////////////////////////// Crossfader /////////////////////
       }
       Pattern_List[patternum].Pattern(true, firstbuffer);   // Run the newest pattern and save to array, bool true = newpat
       Pattern_List[oldpattern].Pattern(false, secondbuffer);    // Run the old pattern and save to array, bool false = oldpat
-      //memcpy8 (leds2, leds, LEDtotal); // __attribute__((noinline))
+      //memcpy8 (leds2, leds, LEDStotal); // __attribute__((noinline))
     }
-    for (uint16_t i = 0; i < LEDtotal; i++) {   // blend em
+    for (uint16_t i = 0; i < LEDStotal; i++) {   // blend em
       writedata[i] = blend( secondbuffer[i], firstbuffer[i], crossct);   // Blend arrays of LEDs, third value is blend %
     }
     Vshow();
@@ -242,51 +227,45 @@ void crossfader() {  ////////////////////////// Crossfader /////////////////////
 }
 /*
 void crossfader() {  ////////////////////////// Crossfader //////////////////////////////////////////
-  EVERY_N_MILLIS_I(mainloop, STATEloopinterval){
-    if (crossct >= 255) { 
-      Pattern_List[patternum].Pattern(true);   // run completed pattern only when fading is complete
-    }
-    else if (crossct < 255) {
-      EVERY_N_MILLIS(20) {
-        crossct += 1;           // higher increase faster xfade
-      }
-      Pattern_List[oldpattern].Pattern(false);    // Run the old pattern and save to array, bool false = oldpat
-      //memcpy8 (leds2, leds, LEDtotal); // __attribute__((noinline))
-      leds2 = leds;
-      Pattern_List[patternum].Pattern(true);   // Run the new pattern and save to array, bool true = newpat
-      for (uint16_t i = 0; i < LEDtotal; i++) {   // blend em
-        leds3[i] = blend( leds[i], leds2[i], crossct);   // Blend arrays of LEDs, third value is blend %
-      }
-    }
-    VIRTUALshow();
+  if (crossct >= 255) { 
+    Pattern_List[patternum].Pattern(true);   // run completed pattern only when fading is complete
   }
-  mainloop.setPeriod(STATEloopinterval);
+  else if (crossct < 255) {
+    EVERY_N_MILLIS(20) {
+      crossct += 1;           // higher increase faster xfade
+    }
+    Pattern_List[oldpattern].Pattern(false);    // Run the old pattern and save to array, bool false = oldpat
+    //memcpy8 (leds2, leds, LEDStotal); // __attribute__((noinline))
+    leds2 = leds;
+    Pattern_List[patternum].Pattern(true);   // Run the new pattern and save to array, bool true = newpat
+    for (uint16_t i = 0; i < LEDStotal; i++) {   // blend em
+      leds3[i] = blend( leds[i], leds2[i], crossct);   // Blend arrays of LEDs, third value is blend %
+    }
+  }
+  VIRTUALshow();
 }*/
 #else
 void crossfader() {  ////////////////////////// Crossfader //////////////////////////////////////////
-  EVERY_N_MILLIS_I(mainloop, STATEloopinterval){
-    if (crossct >= 255) { 
-      // This can be optimized to not copy
-      Pattern_List[patternum].Pattern(true, firstbuffer);   // run only newest pattern if crossfading complete
-      for (uint16_t i = 0; i < LEDtotal; i++) {   // blend em
-        writedata[i] = firstbuffer[i];   // Blend arrays of LEDs, third value is blend %
-      }
+  if (crossct >= 255) { 
+    // This can be optimized to not copy
+    Pattern_List[patternum].Pattern(true, firstbuffer);   // run only newest pattern if crossfading complete
+    for (uint16_t i = 0; i < LEDStotal; i++) {   // blend em
+      writedata[i] = firstbuffer[i];   // Blend arrays of LEDs, third value is blend %
     }
-    else if (crossct < 255) {
-      EVERY_N_MILLIS(20) {
-        crossct += 1;           // higher increase faster xfade
-      }
-      Pattern_List[patternum].Pattern(true, firstbuffer);   // Run the newest pattern and save to array, bool true = newpat
-      Pattern_List[oldpattern].Pattern(false, secondbuffer);    // Run the old pattern and save to array, bool false = oldpat
-      //memcpy8 (leds2, leds, LEDtotal); // __attribute__((noinline))
-      for (uint16_t i = 0; i < LEDtotal; i++) {   // blend em
-        writedata[i] = blend( secondbuffer[i], firstbuffer[i], crossct);   // Blend arrays of LEDs, third value is blend %
-      }
-    }
-    FastLED.show();
-    framerate = FastLED.getFPS();
   }
-  mainloop.setPeriod(STATEloopinterval);
+  else if (crossct < 255) {
+    EVERY_N_MILLIS(20) {
+      crossct += 1;           // higher increase faster xfade
+    }
+    Pattern_List[patternum].Pattern(true, firstbuffer);   // Run the newest pattern and save to array, bool true = newpat
+    Pattern_List[oldpattern].Pattern(false, secondbuffer);    // Run the old pattern and save to array, bool false = oldpat
+    //memcpy8 (leds2, leds, LEDStotal); // __attribute__((noinline))
+    for (uint16_t i = 0; i < LEDStotal; i++) {   // blend em
+      writedata[i] = blend( secondbuffer[i], firstbuffer[i], crossct);   // Blend arrays of LEDs, third value is blend %
+    }
+  }
+  FastLED.show();
+  framerate = FastLED.getFPS();
 }
 #endif
 
@@ -347,10 +326,10 @@ extern uint8_t LEDcurbright;
 void LEDsetup(){
   FastLED.setBrightness(LEDcurbright);
   //FastLED.setMaxRefreshRate(125);
-  FastLED.addLeds<WS2813, LEDpin, GRB>(leds, 0, LEDtotal);
+  FastLED.addLeds<WS2813, LEDpin, GRB>(leds, 0, LEDStotal);
   FastLED.clear(true);
-  LEDhalfstrips = max(1, LEDstrips/2);
-  LEDhalfper = max(1, LEDper/2);
+  LEDhalfstrips = max(1, LEDSx/2);
+  LEDhalfper = max(1, LEDSy/2);
   Pattern_List[patternum].Pattern(true);
 }*/
 
@@ -393,6 +372,7 @@ void wu_pixel(uint32_t x, uint32_t y, CRGB * col, CRGB *dest) {
   #define WU_WEIGHT(a,b) ((uint8_t) (((a)*(b)+(a)+(b))>>8))
   uint8_t wu[4] = {WU_WEIGHT(ix, iy), WU_WEIGHT(xx, iy),
                    WU_WEIGHT(ix, yy), WU_WEIGHT(xx, yy)};
+  #undef WU_WEIGHT
   // multiply the intensities by the colour, and saturating-add them to the pixels
   for (uint8_t i = 0; i < 4; i++) {
     uint16_t xy = XY((x >> 8) + (i & 1), (y >> 8) + ((i >> 1) & 1));
