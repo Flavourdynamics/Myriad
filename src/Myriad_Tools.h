@@ -328,8 +328,8 @@ void LEDsetup(){
   //FastLED.setMaxRefreshRate(125);
   FastLED.addLeds<WS2813, LEDpin, GRB>(leds, 0, LEDStotal);
   FastLED.clear(true);
-  LEDhalfstrips = max(1, LEDSx/2);
-  LEDhalfper = max(1, LEDSy/2);
+  LEDShalfx = max(1, LEDSx/2);
+  LEDShalfy = max(1, LEDSy/2);
   Pattern_List[patternum].Pattern(true);
 }*/
 
