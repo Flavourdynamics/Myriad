@@ -166,10 +166,10 @@ void Myriad_BT::uplist(){
       outdata = outdata + "<bpm," + beat + ">";
       break;
     case 2:
-      outdata = outdata + "<shufint," + STATEpatshuffleinterval + ">";
+      outdata = outdata + "<shuf_int," + STATEpatshuffleinterval + ">";
       break;
     case 3:
-      outdata = outdata + "<palshuffint," + STATEpalshuffleinterval + ">";
+      outdata = outdata + "<pal_int," + STATEpalshuffleinterval + ">";
       break;
     case 4:
       outdata = outdata + "<fps," + framerate + ">";
@@ -179,11 +179,11 @@ void Myriad_BT::uplist(){
       break;
     case 6:
       bipe = patshuffle;
-      outdata = outdata + "<patshuftog," + bipe + ">";
+      outdata = outdata + "<pat_tog," + bipe + ">";
       break;
     case 7:
       bipe = palshuff;
-      outdata = outdata + "<palshuftog," + bipe + ">";
+      outdata = outdata + "<pal_tog," + bipe + ">";
       break;
     case 8:
       bipe = palmatch;
@@ -206,7 +206,7 @@ void Myriad_BT::sendpatterns(){
   for(uint16_t x = 0; x < NUMpatterns; x++){
     outdata = outdata + Pattern_List[x].Name + "#";
   }
-  Bluetooth.print("<patternlist," + outdata + ">");
+  Bluetooth.print("<pat_list," + outdata + ">");
   EVERY_N_SECONDS(1){
     Serial.println("Sending pat list");
   }
@@ -217,7 +217,7 @@ void Myriad_BT::sendpalettes(){
   for(uint16_t x = 0; x < NUMpalettes; x++){
     outdata = outdata + Palette_List[x].Name + "#";
   }
-  Bluetooth.print("<palettelist," + outdata + ">");
+  Bluetooth.print("<pal_list," + outdata + ">");
   EVERY_N_SECONDS(1){
     Serial.println("Sending pal list");
   }
@@ -247,9 +247,17 @@ void Myriad_BT::proc(){
   EVERY_N_MILLIS(STATEBTinterval){
     this->receive();            // Get data
     if(BTappneedslists == true){    // If the app does not have the pattern list
-      this->sendpatterns();     // Send the pattern list
-      this->sendpalettes();
-      BTappneedslists = false;
+      EVERY_N_MILLIS(20){
+        uint8_t randle = random8(2);
+        if(randle == 0){
+          this->sendpatterns();
+          BTappneedslists = false;
+        }
+        else {
+          this->sendpalettes();
+          BTappneedslists = false;
+        }
+      }
     }
     if (BTnewdata == true) {    // If there is new data available
       this->parse();            // Get data and validate it
