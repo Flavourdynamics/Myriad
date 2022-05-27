@@ -205,22 +205,21 @@ void Myriad_BT::bulkupdate(){
   String outdata = "";
   uint8_t bipe; // Standin to cast bools
 
+  // All values sent as strings
+  // LEDcurbright#framerate#STATEpatshuffleinterval#STATEpalshuffleinterval#patshuffle#palshuff#palmatch#palnum
   outdata = outdata + "<status,";
   outdata = outdata + LEDcurbright + "#";
-  outdata = outdata + beat + "#";
+  outdata = outdata + framerate + "#";
   outdata = outdata + STATEpatshuffleinterval + "#";
   outdata = outdata + STATEpalshuffleinterval + "#";
-  outdata = outdata + framerate + "#";
-  outdata = outdata + Pattern_List[patternum].Name + "#";
-  bipe = patshuffle;
+  bipe = patshuffle;  // cast bool to byte
   outdata = outdata + bipe + "#";
-  bipe = palshuff;
+  bipe = palshuff;    // cast bool to byte
   outdata = outdata + bipe + "#";
-  bipe = palmatch;
+  bipe = palmatch;    // cast bool to byte
   outdata = outdata + bipe + "#";
-  bipe = palnum;
-  outdata = outdata + bipe + "#";
-  outdata = outdata + ">";
+  bipe = palnum;      // cast int to byte
+  outdata = outdata + bipe + ">"; // last value uses ">" end marker
   Bluetooth.print(outdata);
 }
 
