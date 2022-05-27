@@ -335,7 +335,7 @@ void EQprintselector(uint8_t target){
   }
 }*/
 
-void EQprintone(uint8_t target){
+void EQprintone(uint8_t target){ // Print detailed info on a single band
   Serial.print("EQbuff: ");
   Serial.println(EQbuff[target], 6);
   Serial.print("EQmins: ");

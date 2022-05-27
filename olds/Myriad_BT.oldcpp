@@ -4,7 +4,7 @@ Myriad_BT::Myriad_BT(){
   //this->Bluetooth.begin("Starshroud");
 }
 
-void Myriad_BT::receive(){      // Gather data from serial
+void Myriad_BT::receive(){
   static bool recvInProgress = false;
   static uint16_t ndx = 0;
   char recievedchar;
@@ -35,15 +35,21 @@ void Myriad_BT::receive(){      // Gather data from serial
 
 void Myriad_BT::parse() {
   char BTtempchars[BTnumchars];
-  strcpy(BTtempchars, BTreceivedchars);    // Copy to protect the original data because strtok() replaces the commas with \0
+  strcpy(BTtempchars, BTreceivedchars);     // this temporary copy is necessary to protect the original data because strtok() replaces the commas with \0
   
-  char * strtokIndx;                       // Used by strtok() as an index
-  strtokIndx = strtok(BTtempchars,",");    // Target the first segment
-  strcpy(BTprimary, strtokIndx);           // Save first segment as a string
+  char * strtokIndx;                          // this is used by strtok() as an index  
+  strtokIndx = strtok(BTtempchars,",");      // get the first part - the string
+  strcpy(BTprimary, strtokIndx);             // copy it to messageFromPC
   
-  strtokIndx = strtok(NULL, ",");          // Continue where the previous call left off
-  strcpy(BTmessage, strtokIndx);           // Save second segment as a string
-  BTsecondary = atoi(strtokIndx);          // Save second segment as an integer
+  if(strcmp(BTprimary, "X") == 0){           
+    strtokIndx = strtok(NULL, ",");           // this continues where the previous call left off
+    strcpy(BTmessage, strtokIndx);           // get a text string if app is sending text
+    Serial.print("String received: ");
+    Serial.println(BTmessage);
+  } else {
+    strtokIndx = strtok(NULL, ",");             
+    BTsecondary = atoi(strtokIndx);          // convert this part to an integer
+  }
 }
 
 void patchangeproc(int newpatnum);
@@ -135,11 +141,8 @@ void Myriad_BT::select(){             // or strcpy(STATEloopval, BLEprimary);
     patshuffle = false;
     patchangeproc(BTsecondary);
   }
-  else if (strcmp(BTprimary, "Patlist") == 0){
-    BTappneedspats = true;
-  }
-  else if (strcmp(BTprimary, "Pallist") == 0){
-    BTappneedspals = true;
+  else if (strcmp(BTprimary, "Listme") == 0){
+    BTappneedslists = true;
   }
   BTnewdata = false;
 }
@@ -150,14 +153,11 @@ extern uint32_t framerate;
 extern uint8_t patternum;
 void Myriad_BT::uplist(){
   String outdata = "";
-  uint8_t bipe;
-
-  if(BTappneedspats == true){
-
-  }
-  else if(BTappneedspals == true){
-
-  }
+  uint8_t bipe; 
+  /*
+  outdata = outdata + "<bright," + LEDbright + ",amps," + LEDamps + ",speed," + STATEloopinterval + ",bpm," + beat + ",bpm," 
+  + beat + ",shufint," + STATEshuffleinterval + ",palshuf," + STATEpalshuffleinterval + ",fps," + LEDS.getFPS() + ",pattern," + PATTERNnum + ">";
+  */  
   switch(BTupcount){
     case 0:
       outdata = outdata + "<bright," + LEDcurbright + ">";
@@ -200,41 +200,16 @@ void Myriad_BT::uplist(){
   }
   Bluetooth.print(outdata);
 }
-
-void Myriad_BT::bulkupdate(){
-  String outdata = "";
-  uint8_t bipe; // Standin to cast bools
-
-  outdata = outdata + "<status,";
-  outdata = outdata + LEDcurbright + "#";
-  outdata = outdata + beat + "#";
-  outdata = outdata + STATEpatshuffleinterval + "#";
-  outdata = outdata + STATEpalshuffleinterval + "#";
-  outdata = outdata + framerate + "#";
-  outdata = outdata + Pattern_List[patternum].Name + "#";
-  bipe = patshuffle;
-  outdata = outdata + bipe + "#";
-  bipe = palshuff;
-  outdata = outdata + bipe + "#";
-  bipe = palmatch;
-  outdata = outdata + bipe + "#";
-  bipe = palnum;
-  outdata = outdata + bipe + "#";
-  outdata = outdata + ">";
-  Bluetooth.print(outdata);
-}
-
 extern const uint16_t NUMpatterns;
 void Myriad_BT::sendpatterns(){
   String outdata = "";
   for(uint16_t x = 0; x < NUMpatterns; x++){
     outdata = outdata + Pattern_List[x].Name + "#";
   }
-  Bluetooth.print("<pat_list," + outdata + ">");
+  Bluetooth.print("<patternlist," + outdata + ">");
   EVERY_N_SECONDS(1){
     Serial.println("Sending pat list");
   }
-  BTappneedspats = false;
 }
 
 void Myriad_BT::sendpalettes(){
@@ -242,11 +217,10 @@ void Myriad_BT::sendpalettes(){
   for(uint16_t x = 0; x < NUMpalettes; x++){
     outdata = outdata + Palette_List[x].Name + "#";
   }
-  Bluetooth.print("<pal_list," + outdata + ">");
+  Bluetooth.print("<palettelist," + outdata + ">");
   EVERY_N_SECONDS(1){
     Serial.println("Sending pal list");
   }
-  BTappneedspals = false;
 }
 
 #ifdef ESP32
@@ -254,13 +228,10 @@ void Myriad_BT::proc(){
   EVERY_N_MILLIS(STATEBTinterval){
     if(Bluetooth.connected()){    // Only run this if connection established
       this->receive();            // Get data
-      if(BTappneedspats){
-        this->sendpatterns();
-        BTappneedspats = false;
-      }
-      if(BTappneedspals){
+      if(BTappneedslists == true){    // If the app does not have the pattern list
+        this->sendpatterns();     // Send the pattern list
         this->sendpalettes();
-        BTappneedspals = false;
+        BTappneedslists = false;
       }
       if (BTnewdata == true) {    // If there is new data available
         this->parse();            // Get data and validate it
@@ -275,13 +246,10 @@ void Myriad_BT::proc(){
 void Myriad_BT::proc(){
   EVERY_N_MILLIS(STATEBTinterval){
     this->receive();            // Get data
-    if(BTappneedspats){
-      this->sendpatterns();
-      BTappneedspats = false;
-    }
-    if(BTappneedspals){
+    if(BTappneedslists == true){    // If the app does not have the pattern list
+      this->sendpatterns();     // Send the pattern list
       this->sendpalettes();
-      BTappneedspals = false;
+      BTappneedslists = false;
     }
     if (BTnewdata == true) {    // If there is new data available
       this->parse();            // Get data and validate it

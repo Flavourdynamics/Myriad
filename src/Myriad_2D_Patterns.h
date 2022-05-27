@@ -33,8 +33,8 @@ void Rando(bool newPL, CRGB *dest){
 void Illusion(bool newPL, CRGB *dest){
   patrunproc(newPL, deffade, 1, 8, Blackwhite);
   //CRGB wucolour;
-  for (uint32_t y = 0; y < LEDhalfper; y++){
-    for (uint32_t x = 0; x < LEDhalfstrips; x++){
+  for (uint32_t y = 0; y < LEDShalfy; y++){
+    for (uint32_t x = 0; x < LEDShalfx; x++){
       dest[XY(x, y)] = ColorFromPalette(currentPalette, hue[newPL] + x*25 + y*25, 255, LINEARBLEND);                      //top left
       dest[XY(LEDSx-1-x, y)] = ColorFromPalette(currentPalette, hue[newPL] + x*25 + y*25, 255, LINEARBLEND);          //top right
       dest[XY(x, LEDSy-1-y)] = ColorFromPalette(currentPalette, hue[newPL] + x*25 + y*25, 255, LINEARBLEND);             //bottom left
@@ -166,8 +166,8 @@ void Flex(bool newPL, CRGB *dest){
 
 void Firetoucher(bool newPL, CRGB *dest){
   patrunproc(newPL, deffade, 1, 24, Redyell);
-  for (int col = 0; col < LEDhalfstrips; col++){         // Write each row with start colour and a random saturation    
-    for(int row = 0; row < LEDhalfper; row++){
+  for (int col = 0; col < LEDShalfx; col++){         // Write each row with start colour and a random saturation    
+    for(int row = 0; row < LEDShalfy; row++){
       int standin = beatsin8(60, 5, 10);      // BPM, MIN, MAX
       dest[XY(col, row)] = ColorFromPalette(currentPalette, hue[newPL] + standin * -col + row * 5, 255, LINEARBLEND);      // Target palette, start hue
       dest[XY(col, LEDSy - 1 - row)] = ColorFromPalette(currentPalette, hue[newPL] + standin * -col + row * 5, 255, LINEARBLEND);
@@ -212,8 +212,8 @@ void Gentle_Leviathan(bool newPL, CRGB *dest){
 
 void Diamondmaw(bool newPL, CRGB *dest){
   patrunproc(newPL, 10, -1, 16, Purple_Cascade);
-  for (int col = 0; col < LEDhalfstrips; col++){         // Write each row with start colour and a random saturation    
-    for(int row = 0; row < LEDhalfper; row++){
+  for (int col = 0; col < LEDShalfx; col++){         // Write each row with start colour and a random saturation    
+    for(int row = 0; row < LEDShalfy; row++){
       int standin = beatsin8(14, -5, 25);      // BPM, MIN, MAX
       dest[XY(col, row)] = ColorFromPalette(currentPalette, hue[newPL] - (col+row)*standin, 255, LINEARBLEND);      // Target palette, start hue
       dest[XY(col, LEDSy - 1 - row)] = ColorFromPalette(currentPalette, hue[newPL] - (col+row)*standin, 255, LINEARBLEND);
@@ -225,8 +225,8 @@ void Diamondmaw(bool newPL, CRGB *dest){
 
 void Him(bool newPL, CRGB *dest){
   patrunproc(newPL, deffade, -1, 10, Gilt);
-  for (int col = 0; col < LEDhalfstrips; col++){         // Write each row with start colour and a random saturation    
-    for(int row = 0; row < LEDhalfper; row++){   
+  for (int col = 0; col < LEDShalfx; col++){         // Write each row with start colour and a random saturation    
+    for(int row = 0; row < LEDShalfy; row++){   
       int standin = beatsin16(14, 50, 300);      // BPM, MIN, MAX
       dest[XY(col, row)] = ColorFromPalette(currentPalette, hue[newPL] + (col+row)*(400-standin)/250 + (col+row*standin*col)/350, 255, LINEARBLEND);      // Target palette, start hue
       dest[XY(col, LEDSy - 1 - row)] = ColorFromPalette(currentPalette, hue[newPL] + (col+row)*(400-standin)/250 + (col+row*standin*col)/350, 255, LINEARBLEND);
@@ -239,8 +239,8 @@ void Him(bool newPL, CRGB *dest){
 void lilminfuk(bool newPL, CRGB *dest){
   patrunproc(newPL, deffade, -1, 16, RainbowStripeColors);
   int standin = beatsin16(8, 75, 175);      // BPM, MIN, MAX
-  for (int col = 0; col < LEDhalfstrips; col++){         // Write each row with start colour and a random saturation    
-    for(int row = 0; row < LEDhalfper; row++){      
+  for (int col = 0; col < LEDShalfx; col++){         // Write each row with start colour and a random saturation    
+    for(int row = 0; row < LEDShalfy; row++){      
       dest[XY(col, row)] = ColorFromPalette(currentPalette, hue[newPL] + (col+row)*(250-standin)/5 + (col+row*standin*col)/250, 255, LINEARBLEND);      // Target palette, start hue
       dest[XY(col, LEDSy - 1 - row)] = ColorFromPalette(currentPalette, hue[newPL] + (col+row)*(250-standin)/5 + (col+row*standin*col)/250, 255, LINEARBLEND);
       dest[XY(LEDSx - 1 - col, row)] = ColorFromPalette(currentPalette, hue[newPL] + (col+row)*(250-standin)/5 + (col+row*standin*col)/250, 255, LINEARBLEND);
@@ -424,8 +424,8 @@ void Canada(bool newPL, CRGB *dest){
 void Staticeye(bool newPL, CRGB *dest){
   patrunproc(newPL, 255, -1, 16, Newspaper);
 
-  for (int col = 0; col < LEDhalfstrips; col++){         // Write each row with start colour and a random saturation    
-    for(int row = 0; row <LEDhalfper; row++){
+  for (int col = 0; col < LEDShalfx; col++){         // Write each row with start colour and a random saturation    
+    for(int row = 0; row < LEDShalfy; row++){
       int standin = beatsin8(20, -1, 1);      // Mess with this to create eye layers and adjust how long it stays at 0, which is the static
       dest[XY(col, row)] = ColorFromPalette(currentPalette, hue[newPL] + (col*standin*row+row), 255, LINEARBLEND);      // Target palette, start hue
       dest[XY(col, LEDSy - 1 - row)] = ColorFromPalette(currentPalette, hue[newPL] + (col*standin*row+row), 255, LINEARBLEND);

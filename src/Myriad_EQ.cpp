@@ -1,6 +1,7 @@
 #include <Myriad_EQ.h>
 // This file contains functions for audio processing
-// Output is in EQscaled[i] and EQdecay[i]
+// Output EQscaled[i] is the exact level scaled to number of LEDS
+// Output EQdecay[i] is scaled and diminishes gradually over time
 
 Myriad_EQ::Myriad_EQ(){
   #ifdef ESP32
