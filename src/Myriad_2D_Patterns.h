@@ -528,7 +528,7 @@ void Orbits(bool newPL, CRGB *dest){
   for (uint16_t i = 0; i < 128; i++) {
     uint8_t x = cos8(xPhase + i * 2) / (256 / 14);
     uint8_t y = sin8(yPhase + i * 2) / (256 / 14);
-    if(i == 1) Serial.println(y);
+    //if(i == 1) Serial.println(y);
     dest[XY(x+0, y+0)] = ColorFromPalette(RainbowColors_p, pixelHue, 255, LINEARBLEND);
     pixelHue += 2;
   }

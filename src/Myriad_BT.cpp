@@ -166,10 +166,10 @@ void Myriad_BT::uplist(){
       outdata = outdata + "<bpm," + beat + ">";
       break;
     case 2:
-      outdata = outdata + "<shufint," + STATEpatshuffleinterval + ">";
+      outdata = outdata + "<shuf_int," + STATEpatshuffleinterval + ">";
       break;
     case 3:
-      outdata = outdata + "<palshuffint," + STATEpalshuffleinterval + ">";
+      outdata = outdata + "<pal_int," + STATEpalshuffleinterval + ">";
       break;
     case 4:
       outdata = outdata + "<fps," + framerate + ">";
@@ -179,11 +179,11 @@ void Myriad_BT::uplist(){
       break;
     case 6:
       bipe = patshuffle;
-      outdata = outdata + "<patshuftog," + bipe + ">";
+      outdata = outdata + "<pat_tog," + bipe + ">";
       break;
     case 7:
       bipe = palshuff;
-      outdata = outdata + "<palshuftog," + bipe + ">";
+      outdata = outdata + "<pal_tog," + bipe + ">";
       break;
     case 8:
       bipe = palmatch;
