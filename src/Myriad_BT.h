@@ -44,7 +44,7 @@ class Myriad_BT{
     void sendpalettes();  // Send palettes over serial
     void sendpatterns();  // Send patterns over serial
     void uplist();        // Cyclically send diferent pieces of data
-    void bulkupdate();    // Send all status info in a single packet
+    void bulkstatusupdate();    // Send all status info in a single packet
     void proc();          // Full proceedure for main loop
 };
 

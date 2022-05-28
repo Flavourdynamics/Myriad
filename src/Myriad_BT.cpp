@@ -201,12 +201,12 @@ void Myriad_BT::uplist(){
   Bluetooth.print(outdata);
 }
 
-void Myriad_BT::bulkupdate(){
+void Myriad_BT::bulkstatusupdate(){
   String outdata = "";
   uint8_t bipe; // Standin to cast bools
 
   // All values sent as strings
-  // LEDcurbright#framerate#STATEpatshuffleinterval#STATEpalshuffleinterval#patshuffle#palshuff#palmatch#palnum
+  // <status,LEDcurbright#framerate#STATEpatshuffleinterval#STATEpalshuffleinterval#patshuffle#palshuff#palmatch#patternum#palnum>
   outdata = outdata + "<status,";
   outdata = outdata + LEDcurbright + "#";
   outdata = outdata + framerate + "#";
@@ -217,6 +217,8 @@ void Myriad_BT::bulkupdate(){
   bipe = palshuff;    // cast bool to byte
   outdata = outdata + bipe + "#";
   bipe = palmatch;    // cast bool to byte
+  outdata = outdata + bipe + "#";
+  bipe = patternum;
   outdata = outdata + bipe + "#";
   bipe = palnum;      // cast int to byte
   outdata = outdata + bipe + ">"; // last value uses ">" end marker
@@ -286,7 +288,8 @@ void Myriad_BT::proc(){
       this->parse();            // Get data and validate it
       this->select();           // Process valid data
     }
-    this->uplist();             // Spam the app with status updates
+    this->bulkstatusupdate();
+    //this->uplist();             // Spam the app with status updates
   }
 }
 #endif
