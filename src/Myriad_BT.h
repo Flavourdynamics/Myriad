@@ -31,7 +31,7 @@ class Myriad_BT{
     char startMarker = '<';
     char endMarker = '>';
     uint8_t BTupcount;
-    uint16_t STATEBTinterval = 1000;
+    uint16_t STATEBTinterval = 100;
 
   public:////////////////////////////////////////////////////
     #ifdef ESP32

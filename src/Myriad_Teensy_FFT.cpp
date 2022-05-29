@@ -35,9 +35,9 @@ float fftdata[EQbins];
 //uint32_t sampleruntime = 1000; // How many samples to take during calibration
 
 // Usable output
-uint16_t EQscaled[EQbins];      // EQ values scaled to LEDSy
+uint16_t EQscaled[EQbins];        // EQ values scaled to LEDSy
 uint16_t EQ10000scaled[EQbins];   // EQ values scaled to 1000
-uint16_t EQflatdecline[EQbins]; // EQ values that decay at 1 LED every run
+uint16_t EQflatdecline[EQbins];   // EQ values that decay at 1 LED every run
 uint16_t EQsummed10000;
 // Beat output
 uint8_t EQbeatDetected[EQbins];
@@ -315,25 +315,6 @@ void EQupdatevalues(){
     }
   }
 }
-/*
-// 0 = print raw buffer, 1
-void EQprintselector(uint8_t target){
-  switch (target){
-  case 0:
-   
-    break;
-
-  case 1:
-  
-    break;
-
-  case 2:
-    break;
-
-  case 3:
-    break;
-  }
-}*/
 
 void EQprintone(uint8_t target){ // Print detailed info on a single band
   Serial.print("EQbuff: ");
@@ -596,16 +577,16 @@ void EQproc(bool calib){
     EQdofft();          // get data
     EQstats();          // do the math
     EQnoisegate();      // apply filters
-    EQupdatevalues();
+    EQupdatevalues();   // apply decay and move data from buffer to usable values
     EQbeatDetection();  // find beat
     EQbeatBuckets();    // also find beat, i guess
-    EQcalibration();  // run this to set maxes and mins
+    EQcalibration();    // run this to set maxes and mins
     //EQbeatBlink();    // basic blink on builtinled
   }
   EQupdatevalues();
 }
 
-void EQproc(byte printmany, bool printone, uint8_t target){
+void EQproc(byte printmany, bool printone, uint8_t target){ // (1=buffer 2=scaled 3= flatdecline, printone, target for printone)
   EVERY_N_MILLIS(EQreadint){
     EQdofft();          // get data
     if(printmany == 1){
@@ -613,7 +594,7 @@ void EQproc(byte printmany, bool printone, uint8_t target){
     }
     EQstats();          // do the math
     EQnoisegate();      // apply filters
-    EQupdatevalues();
+    EQupdatevalues();   // apply decay and move data from buffer to usable values
     EQbeatDetection();  // find beat
     EQbeatBuckets();    // also find beat, i guess
     //EQbeatBlink();    // basic blink on builtinled
@@ -674,164 +655,3 @@ void beatTiming(int i){
   }
 }
     */
-    
-/*
- * // Process the FFT data into bar heights
-  for (byte band = 0; band < NUM_BANDS; band++) {
-    
-    // Scale the bars for the display
-    int barHeight = bandValues[band] / AMPLITUDE;
-    if (barHeight > TOP) barHeight = TOP;
-
-    // Small amount of averaging between frames
-    barHeight = ((oldBarHeights[band] * 1) + barHeight) / 2;
-
-    // Move peak up
-    if (barHeight > peak[band]) {
-      peak[band] = min(TOP, barHeight);
-    }
-
-
-    EVERY_N_SECONDS(10){
-      randle = random8(6);
-    }
-    switch (randle) {
-      FastLED.clear();
-      case 0:
-        rainbowBars(band, barHeight);
-        break;
-      case 1:
-        // No bars on this one
-        break;
-      case 2:
-        purpleBars(band, barHeight);
-        break;
-      case 3:
-        centerBars(band, barHeight);
-        break;
-      case 4:
-        changingBars(band, barHeight);
-        break;
-      case 5:
-        waterfall(band);
-        break;
-    }
-
-    // Draw peaks
-    switch (randle) {
-      case 0:
-        whitePeak(band);
-        break;
-      case 1:
-        outrunPeak(band);
-        break;
-      case 2:
-        whitePeak(band);
-        break;
-      case 3:
-        // No peaks
-        break;
-      case 4:
-        // No peaks
-        break;
-      case 5:
-        // No peaks
-        break;
-    }
-
-    // Save oldBarHeights for averaging later
-    oldBarHeights[band] = barHeight;
-  }
-  
-  // Decay peak
-  EVERY_N_MILLISECONDS(60) {
-    for (byte band = 0; band < NUM_BANDS; band++) 
-      if (peak[band] > 0) peak[band] -= 1;
-    colorTimer++;
-  }
-
-  // Used in some of the patterns
-  EVERY_N_MILLISECONDS(10) {
-    colorTimer++;
-  }
-  
-  FastLED.show();
-}
-
-// PATTERNS BELOW //
-
-void rainbowBars(int band, int barHeight) {
-  int xStart = BAR_WIDTH * band;
-  for (int x = xStart; x < xStart + BAR_WIDTH; x++) {
-    for (int y = 0; y < barHeight; y++) {
-      leds[XY(x,y)] = CHSV((x / BAR_WIDTH) * (255 / NUM_BANDS), 255, 255); 
-    }
-  }
-}
-
-void purpleBars(int band, int barHeight) {
-  int xStart = BAR_WIDTH * band;
-  for (int x = xStart; x < xStart + BAR_WIDTH; x++) {
-    for (int y = 0; y < barHeight; y++) {
-      leds[XY(x,y)] = ColorFromPalette(purplePal, y * (255 / barHeight));
-    }
-  }
-}
-
-void changingBars(int band, int barHeight) {
-  int xStart = BAR_WIDTH * band;
-  for (int x = xStart; x < xStart + BAR_WIDTH; x++) {
-    for (int y = 0; y < barHeight; y++) {
-      leds[XY(x,y)] = CHSV(y * (255 / kMatrixHeight) + colorTimer, 255, 255); 
-    }
-  }
-}
-
-void centerBars(int band, int barHeight) {
-  int xStart = BAR_WIDTH * band;
-  for (int x = xStart; x < xStart + BAR_WIDTH; x++) {
-    if (barHeight % 2 == 0) barHeight--;
-    int yStart = ((kMatrixHeight - barHeight) / 2 );
-    for (int y = yStart; y <= (yStart + barHeight); y++) {
-      int colorIndex = constrain((y - yStart) * (255 / barHeight), 0, 255);
-      leds[XY(x,y)] = ColorFromPalette(heatPal, colorIndex);
-    }
-  }
-}
-
-void whitePeak(int band) {
-  int xStart = BAR_WIDTH * band;
-  int peakHeight = peak[band];
-  for (int x = xStart; x < xStart + BAR_WIDTH; x++) {
-    leds[XY(x,peakHeight)] = CRGB::White;
-  }
-}
-
-void outrunPeak(int band) {
-  int xStart = BAR_WIDTH * band;
-  int peakHeight = peak[band];
-  for (int x = xStart; x < xStart + BAR_WIDTH; x++) {
-    //leds[XY(x,peakHeight)] = CHSV(peakHeight * (255 / kMatrixHeight), 255, 255);
-    leds[XY(x,peakHeight)] = ColorFromPalette(outrunPal, peakHeight * (255 / kMatrixHeight));
-  }
-}
-
-void waterfall(int band) {
-  int xStart = BAR_WIDTH * band;
-  double highestBandValue = 60000;        // Set this to calibrate your waterfall
-
-  // Draw bottom line
-  for (int x = xStart; x < xStart + BAR_WIDTH; x++) {
-    leds[XY(x,0)] = CHSV(constrain(map(bandValues[band],0,highestBandValue,160,0),0,160), 255, 255);
-  }
-
-  // Move screen up starting at 2nd row from top
-  if (band == NUM_BANDS - 1){
-    for (int y = kMatrixHeight - 2; y >= 0; y--) {
-      for (int x = 0; x < kMatrixWidth; x++) {
-        leds[XY(x,y+1)] = leds[XY(x,y)];
-      }
-    }
-  }
-}
-*/

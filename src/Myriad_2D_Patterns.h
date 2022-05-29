@@ -4,7 +4,11 @@
 #include <Myriad_Tools.h>
 #include "Myriad_Palettes.h"
 #include "Myriad_Arrays.h"
-/*
+/* New Pattern Addition Procedure
+1. Use "NewPattern() template to create new pattern
+2. Include defaults for patrunproc based on characteristics of pattern
+3. Add pattern to the list with both function name and stylized name
+
 void NewPattern(bool newPL, CRGB *dest){
   //patrunproc(bool newPL, byte fadeamt, int8_t hueinc, uint8_t huespeed, TProgmemRGBGradientPalettePtr matchpal)
   patrunproc(newPL, 255, 1, 16, Blackwhite);

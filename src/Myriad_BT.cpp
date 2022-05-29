@@ -288,7 +288,7 @@ void Myriad_BT::proc(){
       this->parse();            // Get data and validate it
       this->select();           // Process valid data
     }
-    this->bulkstatusupdate();
+    this->bulkstatusupdate();   // Send all status info as a single packet
     //this->uplist();             // Spam the app with status updates
   }
 }

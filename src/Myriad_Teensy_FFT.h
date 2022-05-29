@@ -16,9 +16,9 @@ extern float fftdata[];
 //extern uint32_t sampleruntime;
 
 // Usable output
-extern uint16_t EQscaled[];      // EQ values scaled to LEDSy
-extern uint16_t EQ10000scaled[];   // EQ values scaled to 1000
-extern uint16_t EQflatdecline[]; // EQ values that decay at 1 LED every run
+extern uint16_t EQscaled[];       // EQ values scaled to LEDSy
+extern uint16_t EQ10000scaled[];  // EQ values scaled to 10000 for more precise mapping
+extern uint16_t EQflatdecline[];  // EQ values that decay at 1 LED every run
 extern uint16_t EQsummed10000;
 // Beat output
 extern uint8_t EQbeatDetected[];
