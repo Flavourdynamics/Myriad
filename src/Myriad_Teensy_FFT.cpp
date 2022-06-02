@@ -398,7 +398,7 @@ void EQbeatDetection() {
     }
     // This is where 1's get reset to 0. If beat is not detected in that frequency, set it's status to 0.
     else {
-      if (EQbeatDetected[i] == 2){
+      if (EQbeatDetected[i] == 2){ // not entirely sure why this is here
         EQbeatDetected[i] = 1;
       }
       if (EQbeatDetected[i] == 1) {

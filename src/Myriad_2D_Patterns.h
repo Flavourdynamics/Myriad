@@ -309,7 +309,7 @@ void Gargyle(bool newPL, CRGB *dest){
 }
 
 void Midearth(bool newPL, CRGB *dest){
-  
+
 }
 
 void Waterfall(bool newPL, CRGB *dest){
@@ -325,7 +325,7 @@ void Waterfall(bool newPL, CRGB *dest){
       //twist = map(twist, 0, 255, -127,127);
       //if (row == 35 && col == 0){Serial.println(twist);}
       //dest[XY(col, row)] = ColorFromPalette(currentPalette, hue[newPL] + row*15 + twist, 255, LINEARBLEND);
-      dest[XY(col, row)] = ColorFromPalette(currentPalette, hue[newPL] + row*15 + twist*twistdir/10000, 255, LINEARBLEND);
+      //dest[XY(col, row)] = ColorFromPaletteExtended(currentPalette, hue[newPL] + row*15 + twist*twistdir/10000, 255, LINEARBLEND);
     }
   }
   EVERY_N_MILLIS(50){
@@ -740,9 +740,9 @@ NamedPattern Pattern_List[] = {
   {(pattern_func)Digital_Rain,       F("Digital Rain")},
   {(pattern_func)Darts,              F("Darts")},
   //{(pattern_func)Textualizer,   F("Textualizer")},
+  {(pattern_func)Orbits,             F("Orbits")},
   {(pattern_func)Canada,             F("Canada")},
   {(pattern_func)Staticeye,          F("Static Eye")},
-  {(pattern_func)Orbits,             F("Orbits")},
 };
 
 uint16_t const NUMpatterns = (sizeof(Pattern_List) / sizeof(Pattern_List[0]));
