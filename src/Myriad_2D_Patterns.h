@@ -340,20 +340,22 @@ void Waterfall(bool newPL, CRGB *dest){
 }
 
 void Quadplexor(bool newPL, CRGB *dest){
-  patrunproc(newPL, 255, 1, 16, Tropicana);
+  patrunproc(newPL, 255, 1, 16, Border_Rainbow);
   for(int band = 0; band < EQbins; band++){
     byte z = map(EQflatdecline[band], 0, LEDSy, 0, LEDSy/2);
     for(int leng = 0; leng < z; leng++){ // Display as 00 11 22 33 44 55 66 66 55 44 33 22 11 00  CHSV(hue+leng*5-s*7, 255, 255); EQscaled[band]
-      dest[XY(LEDSx/2 -1  -band,   LEDSy/2    -2   -leng)] = CHSV(hue[newPL] + band*5 + leng*5, 255, 255);  // Top left
-      dest[XY(LEDSx/2     +band,   LEDSy/2    -2   -leng)] = CHSV(hue[newPL] + band*5 + leng*5, 255, 255);    // Top right
-      dest[XY(LEDSx/2 -1  -band,   LEDSy/2    -1   +leng)] = CHSV(hue[newPL] + band*5 + leng*5, 255, 255);  // Bottom left
-      dest[XY(LEDSx/2     +band,   LEDSy/2    -1   +leng)] = CHSV(hue[newPL] + band*5 + leng*5, 255, 255);    // Bottom right
+      CRGB barhue = ColorFromPalette(currentPalette, hue[newPL] + leng*5 + band*5, 255, LINEARBLEND);
+      dest[XY(LEDSx/2 -1  -band,   LEDSy/2    -2   -leng)] = barhue;  // Top left
+      dest[XY(LEDSx/2     +band,   LEDSy/2    -2   -leng)] = barhue;  // Top right
+      dest[XY(LEDSx/2 -1  -band,   LEDSy/2    -1   +leng)] = barhue;  // Bottom left
+      dest[XY(LEDSx/2     +band,   LEDSy/2    -1   +leng)] = barhue;  // Bottom right
     }
     if(z > 0){ //peaks
-      dest[XY(LEDSx/2 -1  -band,   LEDSy/2    -1   -z )] = CHSV(255, 0, 255);  // Top left
-      dest[XY(LEDSx/2     +band,   LEDSy/2    -1   -z )] = CHSV(255, 0, 255);    // Top right
-      dest[XY(LEDSx/2 -1  -band,   LEDSy/2    -2   +z )] = CHSV(255, 0, 255);  // Bottom left
-      dest[XY(LEDSx/2     +band,   LEDSy/2    -2   +z )] = CHSV(255, 0, 255);    // Bottom right
+      CRGB peakhue = blend(ColorFromPalette(currentPalette, hue[newPL] + band*5 + EQflatdecline[band], 255, LINEARBLEND), CRGB::White, 155);
+      dest[XY(LEDSx/2 -1  -band,   LEDSy/2    -1   -z )] = peakhue;  // Top left
+      dest[XY(LEDSx/2     +band,   LEDSy/2    -1   -z )] = peakhue;  // Top right
+      dest[XY(LEDSx/2 -1  -band,   LEDSy/2    -2   +z )] = peakhue;  // Bottom left
+      dest[XY(LEDSx/2     +band,   LEDSy/2    -2   +z )] = peakhue;  // Bottom right
     }
   }
 }
