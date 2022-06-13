@@ -308,8 +308,39 @@ void Gargyle(bool newPL, CRGB *dest){
   //blur2d( leds, LEDSx, LEDSy, 128);
 }
 
+static uint32_t timering[2];
+static uint16_t hues;
 void Midearth(bool newPL, CRGB *dest){
+  static const uint8_t items = 60; // How many rings
+  static uint16_t menoise[items][2];
+  static bool beatexpand;
+  static byte beatmult;
 
+  if (EQbeat == true){
+  beatexpand = true;
+  }
+  if (beatexpand == true && beatmult < 3){
+    beatmult++;
+  }
+  if (beatexpand == true && beatmult >= 3){
+    beatexpand = false;
+  }
+  if (beatexpand == false && beatmult > 0){
+    beatmult--;
+  }
+  for(uint16_t i = items; i > 0; i--){ // This loop is backwards for consistency below
+    menoise[i][0] = inoise16(menoise[i][0], timering[0] - i * 2560);
+    menoise[i][1] = inoise16(menoise[i][1], timering[1] - i * 3560);
+    uint16_t xcord = map(menoise[i][0], 0, 65535, 0, LEDSx-1);
+    uint16_t ycord = map(menoise[i][1], 0, 65535 , 0, LEDSy-1);
+    CRGB colour = ColorFromPaletteExtended(Gilt, hues + i*256*14, 255, LINEARBLEND);
+    ledmatrix.DrawFilledCircle(xcord, ycord, i + beatmult, colour);
+  }
+  timering[0]+=500;
+  timering[1]+=751;
+  EVERY_N_MILLIS(10){
+    hues-=50;
+  }
 }
 
 void Waterfall(bool newPL, CRGB *dest){
@@ -321,11 +352,11 @@ void Waterfall(bool newPL, CRGB *dest){
       // This monster determines how much the wave twists
       //int16_t twist = sin16((row + col+count[newPL]))*(1+row)/80;
       int16_t twist = sin8((row*7 + col*10+count[newPL]))*(1+row)/80;
-      //int16_t twisto = sin16(col+count[newPL])/80;
-      //twist = map(twist, 0, 255, -127,127);
+      int16_t twisto = sin16(col+count[newPL])/80;
+      twist = map(twist, 0, 255, -127,127);
       //if (row == 35 && col == 0){Serial.println(twist);}
-      //dest[XY(col, row)] = ColorFromPalette(currentPalette, hue[newPL] + row*15 + twist, 255, LINEARBLEND);
-      //dest[XY(col, row)] = ColorFromPaletteExtended(currentPalette, hue[newPL] + row*15 + twist*twistdir/10000, 255, LINEARBLEND);
+      dest[XY(col, row)] = ColorFromPalette(currentPalette, hue[newPL] + row*15 + twist, 255, LINEARBLEND);
+      dest[XY(col, row)] = ColorFromPaletteExtended(currentPalette, hue[newPL] + row*15 + twist*twistdir/10000, 255, LINEARBLEND);
     }
   }
   EVERY_N_MILLIS(50){
@@ -341,21 +372,24 @@ void Waterfall(bool newPL, CRGB *dest){
 
 void Quadplexor(bool newPL, CRGB *dest){
   patrunproc(newPL, 255, 1, 16, Border_Rainbow);
-  for(int band = 0; band < EQbins; band++){
-    byte z = map(EQflatdecline[band], 0, LEDSy, 0, LEDSy/2);
-    for(int leng = 0; leng < z; leng++){ // Display as 00 11 22 33 44 55 66 66 55 44 33 22 11 00  CHSV(hue+leng*5-s*7, 255, 255); EQscaled[band]
+  for(int band = 0; band < 14; band++){ // EQbins
+    uint16_t barheight = map(EQscaled[band], 0, LEDSy, 0, LEDShalfy);
+    for(int leng = 0; leng < barheight; leng++){ // Display as 00 11 22 33 44 55 66 66 55 44 33 22 11 00
       CRGB barhue = ColorFromPalette(currentPalette, hue[newPL] + leng*5 + band*5, 255, LINEARBLEND);
-      dest[XY(LEDSx/2 -1  -band,   LEDSy/2    -2   -leng)] = barhue;  // Top left
-      dest[XY(LEDSx/2     +band,   LEDSy/2    -2   -leng)] = barhue;  // Top right
-      dest[XY(LEDSx/2 -1  -band,   LEDSy/2    -1   +leng)] = barhue;  // Bottom left
-      dest[XY(LEDSx/2     +band,   LEDSy/2    -1   +leng)] = barhue;  // Bottom right
+      dest[XY(LEDShalfx -1 -band, LEDShalfy -1 -leng)] = barhue;  // Top left
+      dest[XY(LEDShalfx    +band, LEDShalfy -1 -leng)] = barhue;  // Top right
+      dest[XY(LEDShalfx -1 -band, LEDShalfy    +leng)] = barhue;  // Bottom left
+      dest[XY(LEDShalfx    +band, LEDShalfy    +leng)] = barhue;  // Bottom right
     }
-    if(z > 0){ //peaks
-      CRGB peakhue = blend(ColorFromPalette(currentPalette, hue[newPL] + band*5 + EQflatdecline[band], 255, LINEARBLEND), CRGB::White, 155);
-      dest[XY(LEDSx/2 -1  -band,   LEDSy/2    -1   -z )] = peakhue;  // Top left
-      dest[XY(LEDSx/2     +band,   LEDSy/2    -1   -z )] = peakhue;  // Top right
-      dest[XY(LEDSx/2 -1  -band,   LEDSy/2    -2   +z )] = peakhue;  // Bottom left
-      dest[XY(LEDSx/2     +band,   LEDSy/2    -2   +z )] = peakhue;  // Bottom right
+    uint16_t peak = map(EQflatdecline[band], 0, LEDSy, 0, LEDShalfy - 1); // Get peak position
+    if(peak > 0){ // No peaks on zero
+      CRGB peaknative = ColorFromPalette(currentPalette, hue[newPL] + band*5 + peak*5, 255, LINEARBLEND);
+      uint8_t desaturation = map(EQflatdecline[band], 0, LEDSy, 80, 255); // Get relative height from raw flat decline data
+      CRGB peakhue = blend(peaknative, CRGB::White, desaturation);  // Blend between native and white in proportion to height
+      dest[XY(LEDShalfx -1 -band,  LEDShalfy -1 -peak)] = peakhue;  // Top left
+      dest[XY(LEDShalfx    +band,  LEDShalfy -1 -peak)] = peakhue;  // Top right
+      dest[XY(LEDShalfx -1 -band,  LEDShalfy    +peak)] = peakhue;  // Bottom left
+      dest[XY(LEDShalfx    +band,  LEDShalfy    +peak)] = peakhue;  // Bottom right
     }
   }
 }
@@ -412,17 +446,18 @@ void Digital_Rain(bool newPL, CRGB *dest){           // Have to randomize target
 
 void Canada(bool newPL, CRGB *dest){
   patrunproc(newPL, 255, -1, 16, Newspaper);
-  for(int y = 0; y < LEDSy; y++){            //read original values from array and add hue mod
+
+  for(int y = 0; y < LEDSy; y++){
     for(int x = 0; x < LEDSx; x++){
       if(pgm_read_byte_near(&canadaray[y*LEDSx+x]) == 0){            //white
         dest[XY(x, y)] = CRGB(255, 255, 255);
-      } 
+      }
       else if(pgm_read_byte_near(&canadaray[y*LEDSx+x]) == 1){      //red
         dest[XY(x, y)] = CRGB(255, 0, 0);
-      } 
+      }
       else if(pgm_read_byte_near(&canadaray[y*LEDSx+x]) == 2){     //pink       just set to red for now
         dest[XY(x, y)] = CRGB(255, 0, 0);
-      } 
+      }
     }
   }
 }
@@ -741,7 +776,6 @@ NamedPattern Pattern_List[] = {
   {(pattern_func)Spectral_Waterfall, F("Spectral Waterfall")},
   {(pattern_func)Digital_Rain,       F("Digital Rain")},
   {(pattern_func)Darts,              F("Darts")},
-  //{(pattern_func)Textualizer,   F("Textualizer")},
   {(pattern_func)Orbits,             F("Orbits")},
   {(pattern_func)Canada,             F("Canada")},
   {(pattern_func)Staticeye,          F("Static Eye")},

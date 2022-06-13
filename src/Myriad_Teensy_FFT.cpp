@@ -237,24 +237,13 @@ void EQdofft(){
 void EQnoisegate(){
   extern const uint16_t LEDSy;      // I can't seem to pass the LEDSy define from config to this library
 
-  // 1024 Adafruit
-  //float noisefloor[EQbins] = {0.027404785156250,  0.018676757812500,  0.016479492187500,  0.016235351562500,  0.010742187500000,  0.005859375000000,  0.004150390625000,  0.003051757812500,  0.002319335937500,  0.002380371093750,  0.002319335937500,  0.002624511718750,  0.001770019531250,  0.001037597656250};
-  //float mintops[EQbins] =     { 0.066284179687500,  0.060791015625000,  0.057189941406250,  0.050842285156250,  0.034362792968750,  0.028076171875000,  0.019897460937500,  0.009948730468750,  0.005493164062500,  0.009094238281250,  0.005554199218750,  0.005859375000000,  0.005310058593750,  0.006408691406250};
-  
-  // 1024 Randanalog
-  //float noisefloor[EQbins] = {};
-  //float mintops[EQbins] =     {};
-  
-  // 1024 I2S
-  //float noisefloor[EQbins] = {0.046447753906250,  0.029479980468750,  0.029602050781250,  0.031677246093750,  0.019287109375000,  0.011352539062500,  0.005004882812500,  0.004943847656250,  0.001220703125000,  0.001953125000000,  0.003234863281250,  0.001586914062500,  0.002807617187500,  0.001403808593750};
-  //float mintops[EQbins] =     {0.064514160156250,  0.051330566406250,  0.047119140625000,  0.045227050781250,  0.025390625000000,  0.015136718750000,  0.006896972656250,  0.007141113281250,  0.002197265625000,  0.002746582031250,  0.004028320312500,  0.001953125000000,  0.003784179687500,  0.001892089843750};
   for(int i = 0; i < EQbins; i++){
     //uint32_t x = _max(noisefloor[i], EQmins[i]);
     //uint32_t y = _max(mintops[i], );
     float a = _max(EQnoisefloor[i], EQmins[i]);             // Use the highest min value coded or caluclated
     float x = _max(a, 0); // Use the highest min value coded, calculated, or 2.5 std devs away from average  uint32_t x = max(a, (EQaverage[i] - (2.5 *EQstDev[i]))); // Use the highest min value coded, calculated, or 2.5 std devs away from average
     float b = _max(EQmintops[i], EQmaxes[i]);                // Use the highest max value coded or calculated
-    float y = _max(b, (EQaverage[i] + (2.5 *EQstDev[i]))); // Use the highest max value coded, calculated, or 2.5 std devs away from average
+    float y = _max(b, EQaverage[i] + (2.5 * EQstDev[i])); // Use the highest max value coded, calculated, or 2.5 std devs away from average
     //uint32_t z = _max(EQbuff[i], EQdecay[i]);
     float z = _max(EQbuff[i], 0);
 
@@ -266,6 +255,7 @@ void EQnoisegate(){
       EQscaled[i] = 0;        // Make sure to true 0 the scaled bands
       EQ10000scaled[i] = 0;
     }
+    
     if(EQscaled[i] >= EQflatdecline[i]){ // If the scaled value is now higher than the flat decline, up the flat decline value
       EQflatdecline[i] = EQscaled[i];
     }
@@ -285,7 +275,7 @@ void EQstats(){
     if( EQbuff[i] >= EQmaxes[i] ){             // Set maximum volume level for scaling       
       EQmaxes[i] = EQbuff[i];
     } else {
-      EQmaxes[i] = EQmaxes[i] - _max(.1, EQmaxes[i] * .01);        // need to make this based on std deviation
+      EQmaxes[i] = EQmaxes[i] - _max(EQaverage[i]*.01, EQmaxes[i] * .01);
     }
 
     if( EQbuff[i] <= EQmins[i] ){             // Set minimum volume level for scaling   
@@ -509,7 +499,7 @@ void EQcalibration(){   // Calibrate values for noisefloor() gate function
   }
 }
 
-float EQfindE(int bands, int bins) {
+float EQfindE(int bands, int bins) { // Find e for dynamically determining EQ bins
   float increment=0.1, eTest, n;
   int b, count, d;
 

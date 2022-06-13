@@ -7,13 +7,12 @@
 #include <Myriad_Types.h>
 #include <Statistic.h>
 #define EQbins         14    // To change this, you will need to change the bunch of if statements describing the mapping from bins to bands
-#define EQsamples      256   // Must be a power of 2
+#define EQsamples      256   // Must be a power of 2, more samples more precise, but more than 256 is not necessary for visualization
 #define EQreadint      10    // How often data is gathered and processed
-#define EQdeclineint   5     // How often to flat decline data
-#define sampleruntime  4500  // 
+#define EQdeclineint   12    // How often to flat decline data
+#define sampleruntime  4500  // How many samples to take for noise calibration
 
 extern float fftdata[];
-//extern uint32_t sampleruntime;
 
 // Usable output
 extern uint16_t EQscaled[];       // EQ values scaled to LEDSy

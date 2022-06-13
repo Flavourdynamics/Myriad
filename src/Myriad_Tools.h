@@ -249,16 +249,19 @@ void crossfader() {  ////////////////////////// Crossfader /////////////////////
   if (crossct >= 255) { 
     // This can be optimized to not copy
     Pattern_List[patternum].Pattern(true, firstbuffer);   // run only newest pattern if crossfading complete
-    for (uint16_t i = 0; i < LEDStotal; i++) {   // blend em
+    for (uint16_t i = 0; i < LEDStotal; i++) {   // Need to use writedata for continuity
       writedata[i] = firstbuffer[i];   // Blend arrays of LEDs, third value is blend %
     }
+    napplyGamma_video(writedata, LEDStotal, STATEpalshuffleinterval/10);
   }
   else if (crossct < 255) {
     EVERY_N_MILLIS(20) {
       crossct += 1;           // higher increase faster xfade
     }
     Pattern_List[patternum].Pattern(true, firstbuffer);   // Run the newest pattern and save to array, bool true = newpat
+    napplyGamma_video(firstbuffer, LEDStotal, STATEpalshuffleinterval/10);
     Pattern_List[oldpattern].Pattern(false, secondbuffer);    // Run the old pattern and save to array, bool false = oldpat
+    napplyGamma_video(secondbuffer, LEDStotal, STATEpalshuffleinterval/10);
     //memcpy8 (leds2, leds, LEDStotal); // __attribute__((noinline))
     for (uint16_t i = 0; i < LEDStotal; i++) {   // blend em
       writedata[i] = blend( secondbuffer[i], firstbuffer[i], crossct);   // Blend arrays of LEDs, third value is blend %
