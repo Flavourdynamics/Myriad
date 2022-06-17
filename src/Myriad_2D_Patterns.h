@@ -20,18 +20,17 @@ void Rando(bool newPL, CRGB *dest){
   int lowernummorelights = 255;
   uint16_t targetx = random16(0, LEDSx);
   uint16_t targety = random16(0, LEDSy);
-  CRGB wucolour;
+  CRGB colour;
   if(palnum == palmatch){
     for (int i = 0; i < LEDStotal/lowernummorelights ; i++){
-      wucolour = CHSV(random8(), random8(), random8(150, 255));
+      colour = CHSV(random8(), random8(), random8(150, 255));
     }
   } else {
     for (int i = 0; i < LEDStotal/lowernummorelights ; i++){
-      wucolour = ColorFromPalette(currentPalette, random8(), 255, LINEARBLEND);
+      colour = ColorFromPalette(currentPalette, random8(), 255, LINEARBLEND);
     }
   }
-  dest[XY(targetx, targety)] = wucolour;
-  //wu_pixel(targetx,targety, &wucolour, dest);
+  dest[XY(targetx, targety)] = colour;
 }
  
 void Illusion(bool newPL, CRGB *dest){
@@ -54,7 +53,7 @@ void Illusion(bool newPL, CRGB *dest){
   }
 }
 
-void Diagonal(bool newPL, CRGB *dest){
+void Diagong(bool newPL, CRGB *dest){
   patrunproc(newPL, deffade, 1, 16, Startup);
   //Serial.println(newPL);
   for (int y = 0; y < rowcount[newPL]; y++){
@@ -68,15 +67,6 @@ void Diagonal(bool newPL, CRGB *dest){
     }
     if (rowcount[newPL] < LEDSy) {
       rowcount[newPL]++;
-    }
-  }
-}
-
-void Scan(bool newPL, CRGB *dest){
-  patrunproc(newPL, deffade, 1, 16, RainbowColors);
-  for (int y = 0; y < LEDSy; y++){
-    for (int x = 0; x < LEDSx; x++){
-      dest[XY(x, y)] = ColorFromPalette(currentPalette, hue[newPL], random8(100,150), LINEARBLEND); 
     }
   }
 }
@@ -155,9 +145,9 @@ void Flex(bool newPL, CRGB *dest){
   for (int col = 0; col < LEDSx; col++){         // Write each row with start colour and a random saturation
     int beatbox = beatsin8(20/beatmod, 3, abs(14-col) + 15);
     for(int row = 0; row < rowcount[newPL]; row++){
-      dest[XY(col, row)] = ColorFromPalette(currentPalette, hue[newPL] + beatbox*row, 255, LINEARBLEND); // fill_rainbow(leds[x], number of leds, start hue, hue delta)  
-      dest[XY(LEDSx-1-col, row)] = ColorFromPalette(currentPalette, hue[newPL] + beatbox*row, 255, LINEARBLEND);  
-      //ledmatrix.VerticalMirror();
+      CRGB colour = ColorFromPalette(currentPalette, hue[newPL] + beatbox*row, 255, LINEARBLEND);
+      dest[XY(col, row)] = colour;
+      dest[XY(LEDSx-1-col, row)] = colour;
       //leds[(LEDSx*LEDSy)-(col*LEDSy+row)] = ColorFromPalette(currentPalette, hue + beatbox*row, 255, LINEARBLEND); // fill_rainbow(leds[x], number of leds, start hue, hue delta)         fill_rainbow( leds[col], rowcount/2, hue, beatbox); // fill_rainbow(leds[x], number of leds, start hue, hue delta)
     }
   }          
@@ -173,45 +163,42 @@ void Firetoucher(bool newPL, CRGB *dest){
   for (int col = 0; col < LEDShalfx; col++){         // Write each row with start colour and a random saturation    
     for(int row = 0; row < LEDShalfy; row++){
       int standin = beatsin8(60, 5, 10);      // BPM, MIN, MAX
-      dest[XY(col, row)] = ColorFromPalette(currentPalette, hue[newPL] + standin * -col + row * 5, 255, LINEARBLEND);      // Target palette, start hue
-      dest[XY(col, LEDSy - 1 - row)] = ColorFromPalette(currentPalette, hue[newPL] + standin * -col + row * 5, 255, LINEARBLEND);
-      dest[XY(LEDSx - 1 - col, row)] = ColorFromPalette(currentPalette, hue[newPL] + standin * -col + row * 5, 255, LINEARBLEND);
-      dest[XY((LEDSx - 1 - col), LEDSy - 1 - row)] = ColorFromPalette(currentPalette, hue[newPL] + standin * -col + row * 5, 255, LINEARBLEND);
+      CRGB colour =  ColorFromPalette(currentPalette, hue[newPL] + standin * -col + row * 5, 255, LINEARBLEND);
+      dest[XY(col, row)] = colour;
+      dest[XY(col, LEDSy - 1 - row)] = colour;
+      dest[XY(LEDSx - 1 - col, row)] = colour;
+      dest[XY((LEDSx - 1 - col), LEDSy - 1 - row)] = colour;
     }
   } 
 }
 
+
 void Gentle_Leviathan(bool newPL, CRGB *dest){
   patrunproc(newPL, 55, 1, 24, RainbowColors);
-  //blackout(writedata);
-  uint16_t numbeads = numnoise/2;
+  const uint16_t numbeads = 250;
+  static uint16_t noise[numbeads][2]; // create two arrays with x and y coordinates
   uint16_t lowbound = 14000; // The average boundaries of inoise16
   uint16_t hibound = 52000;  // The average boundaries of inoise16
 
   for(int bead = 1; bead < numbeads; bead++){
-    noise[newPL][bead][0] = inoise16(noise[newPL][bead][0], timer[newPL]+bead*1000);     // get some noise
-    noise[newPL][bead][0] = constrain(noise[newPL][bead][0], lowbound, hibound);               // keep it within a reasonable scalable boundary (aesthetic judgement)
-    uint16_t xpos = map(noise[newPL][bead][0], lowbound, hibound, 0, LEDSx);        // Map it to width
+    noise[bead][0] = inoise16(noise[bead][0], timer[newPL]+bead*1000);     // get some noise
+    noise[bead][0] = constrain(noise[bead][0], lowbound, hibound);               // keep it within a reasonable scalable boundary (aesthetic judgement)
+    uint16_t xpos = map(noise[bead][0], lowbound, hibound, 0, LEDSx);        // Map it to width
 
-    noise[newPL][bead][1] = inoise16(noise[newPL][bead][1], timer[newPL]*2+bead*1000); //random8() this was in the last arg
-    noise[newPL][bead][1] = constrain(noise[newPL][bead][1], lowbound, hibound); 
-    uint16_t ypos = map(noise[newPL][bead][1], lowbound, hibound, 0, LEDSy);
+    noise[bead][1] = inoise16(noise[bead][1], timer[newPL]*2+bead*1000); //random8() this was in the last arg
+    noise[bead][1] = constrain(noise[bead][1], lowbound, hibound); 
+    uint16_t ypos = map(noise[bead][1], lowbound, hibound, 0, LEDSy);
 
     ledmatrix.DrawFilledCircle(xpos, ypos, 2, blend(ColorFromPalette(currentPalette, hue[newPL] + bead*1, 255, LINEARBLEND), CRGB::White, 55));
   }
   for (uint16_t i = 0; i < LEDStotal; i++) {   // blend em
     dest[i] = blend( dest[i], writedata[i], 45);   // Blend arrays of LEDs, third value is blend %
   }
-  //for (uint16_t i = 0; i < LEDStotal; i++) {   // blend em
-  //  dest[i] = blend( dest[i], CRGB::White, 5);   // Blend arrays of LEDs, third value is blend %
-  //}
-  //blend( dest, LEDmatrixCRGB, 255);
   //memcpy8(dest, LEDmatrixCRGB, LEDStotal*3);
   blur(dest, LEDSx, LEDSy, 45);
   EVERY_N_MILLIS(1){
     timer[newPL]+=55;
   }
-  //timer[newPL]+=150;
 }
 
 void Diamondmaw(bool newPL, CRGB *dest){
@@ -219,10 +206,11 @@ void Diamondmaw(bool newPL, CRGB *dest){
   for (int col = 0; col < LEDShalfx; col++){         // Write each row with start colour and a random saturation    
     for(int row = 0; row < LEDShalfy; row++){
       int standin = beatsin8(14, -5, 25);      // BPM, MIN, MAX
-      dest[XY(col, row)] = ColorFromPalette(currentPalette, hue[newPL] - (col+row)*standin, 255, LINEARBLEND);      // Target palette, start hue
-      dest[XY(col, LEDSy - 1 - row)] = ColorFromPalette(currentPalette, hue[newPL] - (col+row)*standin, 255, LINEARBLEND);
-      dest[XY(LEDSx - 1 - col, row)] = ColorFromPalette(currentPalette, hue[newPL] - (col+row)*standin, 255, LINEARBLEND);
-      dest[XY(LEDSx - 1 - col, LEDSy - 1 - row)] = ColorFromPalette(currentPalette, hue[newPL] - (col+row)*standin, 255, LINEARBLEND);
+      CRGB colour =  ColorFromPalette(currentPalette, hue[newPL] - (col+row)*standin, 255, LINEARBLEND);
+      dest[XY(col, row)] = colour;
+      dest[XY(col, LEDSy - 1 - row)] = colour;
+      dest[XY(LEDSx - 1 - col, row)] = colour;
+      dest[XY(LEDSx - 1 - col, LEDSy - 1 - row)] = colour;
     }
   }
 }
@@ -232,23 +220,29 @@ void Him(bool newPL, CRGB *dest){
   for (int col = 0; col < LEDShalfx; col++){         // Write each row with start colour and a random saturation    
     for(int row = 0; row < LEDShalfy; row++){   
       int standin = beatsin16(14, 50, 300);      // BPM, MIN, MAX
-      dest[XY(col, row)] = ColorFromPalette(currentPalette, hue[newPL] + (col+row)*(400-standin)/250 + (col+row*standin*col)/350, 255, LINEARBLEND);      // Target palette, start hue
-      dest[XY(col, LEDSy - 1 - row)] = ColorFromPalette(currentPalette, hue[newPL] + (col+row)*(400-standin)/250 + (col+row*standin*col)/350, 255, LINEARBLEND);
-      dest[XY(LEDSx - 1 - col, row)] = ColorFromPalette(currentPalette, hue[newPL] + (col+row)*(400-standin)/250 + (col+row*standin*col)/350, 255, LINEARBLEND);
-      dest[XY(LEDSx - 1 - col, LEDSy - 1 - row)] = ColorFromPalette(currentPalette, hue[newPL] + (col+row)*(400-standin)/250 + (col+row*standin*col)/350, 255, LINEARBLEND);
+      CRGB colour =  ColorFromPalette(currentPalette, hue[newPL] + (col+row)*(400-standin)/250 + (col+row*standin*col)/350, 255, LINEARBLEND);
+      dest[XY(col, row)] = colour;
+      dest[XY(col, LEDSy - 1 - row)] = colour;
+      dest[XY(LEDSx - 1 - col, row)] = colour;
+      dest[XY(LEDSx - 1 - col, LEDSy - 1 - row)] = colour;
     }
   }
 }
 
-void lilminfuk(bool newPL, CRGB *dest){
-  patrunproc(newPL, deffade, -1, 16, RainbowStripeColors);
-  int standin = beatsin16(8, 75, 175);      // BPM, MIN, MAX
-  for (int col = 0; col < LEDShalfx; col++){         // Write each row with start colour and a random saturation    
-    for(int row = 0; row < LEDShalfy; row++){      
-      dest[XY(col, row)] = ColorFromPalette(currentPalette, hue[newPL] + (col+row)*(250-standin)/5 + (col+row*standin*col)/250, 255, LINEARBLEND);      // Target palette, start hue
-      dest[XY(col, LEDSy - 1 - row)] = ColorFromPalette(currentPalette, hue[newPL] + (col+row)*(250-standin)/5 + (col+row*standin*col)/250, 255, LINEARBLEND);
-      dest[XY(LEDSx - 1 - col, row)] = ColorFromPalette(currentPalette, hue[newPL] + (col+row)*(250-standin)/5 + (col+row*standin*col)/250, 255, LINEARBLEND);
-      dest[XY(LEDSx - 1 - col, LEDSy - 1 - row)] = ColorFromPalette(currentPalette, hue[newPL] + (col+row)*(250-standin)/5 + (col+row*standin*col)/250, 255, LINEARBLEND);
+void Praxis(bool newPL, CRGB *dest){
+  patrunproc(newPL, deffade, 0, 16, Pit); // -1
+  uint16_t standin = beatsin16(14, -125, -1);      // 14, -125, -1
+  uint16_t mutator = beatsin16(2, 550, 900);
+  //uint16_t standin = map(beat16(0, -125, -1);      // 14, -125, -1
+  //uint16_t mutator = map(beat16(2, 525, 900);
+  for (uint16_t col = 0; col < LEDShalfx; col++){         // Write each row with start colour and a random saturation    
+    for(uint16_t row = 0; row < LEDShalfy; row++){
+      //CRGB colour = ColorFromPalette(currentPalette, hue[newPL] + (col+row)*(250-standin)/5 + (col+row*standin*col)/1000, 255, LINEARBLEND);
+      CRGB colour = ColorFromPalette(currentPalette, hue[newPL] + (col+row)*(250-standin)/5 + (col+row*standin*col)/mutator, 255, LINEARBLEND);
+      dest[XY(col, row)] =                          blend(dest[XY(col, row)], colour, 4);
+      dest[XY(col, LEDSy - 1 - row)] =              blend(dest[XY(col, LEDSy - 1 - row)], colour, 4);
+      dest[XY(LEDSx - 1 - col, row)] =              blend(dest[XY(LEDSx - 1 - col, row)], colour, 4);
+      dest[XY(LEDSx - 1 - col, LEDSy - 1 - row)] =  blend(dest[XY(LEDSx - 1 - col, LEDSy - 1 - row)], colour, 4);
     }
   }
 }
@@ -263,7 +257,7 @@ void Barbarism(bool newPL, CRGB *dest){
   uint16_t ylim = LEDSy - barlength;  // to prevent overflow vert
   uint16_t xlim = LEDSx - barlength;
 
-  EVERY_N_MILLIS(1){
+  EVERY_N_MILLIS(10){
     xmarksthespot = random16(0, xlim);
     ymarksthespot = random16(0, ylim);
     xrand = random16(LEDSx);
@@ -311,6 +305,7 @@ void Gargyle(bool newPL, CRGB *dest){
 static uint32_t timering[2];
 static uint16_t hues;
 void Midearth(bool newPL, CRGB *dest){
+  patrunproc(newPL, 255, -1, 8, CloudColors);
   static const uint8_t items = 60; // How many rings
   static uint16_t menoise[items][2];
   static bool beatexpand;
@@ -334,11 +329,13 @@ void Midearth(bool newPL, CRGB *dest){
     uint16_t xcord = map(menoise[i][0], 0, 65535, 0, LEDSx-1);
     uint16_t ycord = map(menoise[i][1], 0, 65535 , 0, LEDSy-1);
     CRGB colour = ColorFromPaletteExtended(Gilt, hues + i*256*14, 255, LINEARBLEND);
-    ledmatrix.DrawFilledCircle(xcord, ycord, i + beatmult, colour);
+    //ledmatrix.DrawFilledCircle(xcord, ycord, i + beatmult, colour);
+    ledmatrix.DrawCircle(xcord, ycord, i + beatmult, colour);
   }
-  timering[0]+=500;
-  timering[1]+=751;
+  memcpy8(dest, writedata, LEDStotal*3);
   EVERY_N_MILLIS(10){
+    timering[0]+=400;
+    timering[1]+=651;
     hues-=50;
   }
 }
@@ -350,13 +347,13 @@ void Waterfall(bool newPL, CRGB *dest){
   for (int row = 0; row < rowcount[newPL]; row++){
     for (int col = 0; col < LEDSx; col++){
       // This monster determines how much the wave twists
-      //int16_t twist = sin16((row + col+count[newPL]))*(1+row)/80;
-      int16_t twist = sin8((row*7 + col*10+count[newPL]))*(1+row)/80;
-      int16_t twisto = sin16(col+count[newPL])/80;
-      twist = map(twist, 0, 255, -127,127);
+      //int16_t twist = sin16((row + col+count[newPL]))*(1+row)/80; // test
+      int16_t twist = sin8((row*7 + col*10+count[newPL]))*(1+row)/80; // functional
+      // int16_t twisto = sin16(col+count[newPL])/80;  // test
+      twist = map(twist, 0, 255, -127,127);  // functional
       //if (row == 35 && col == 0){Serial.println(twist);}
       dest[XY(col, row)] = ColorFromPalette(currentPalette, hue[newPL] + row*15 + twist, 255, LINEARBLEND);
-      dest[XY(col, row)] = ColorFromPaletteExtended(currentPalette, hue[newPL] + row*15 + twist*twistdir/10000, 255, LINEARBLEND);
+      //dest[XY(col, row)] = ColorFromPaletteExtended(currentPalette, hue[newPL] + row*15 + twist*twistdir/10000, 255, LINEARBLEND);
     }
   }
   EVERY_N_MILLIS(50){
@@ -397,9 +394,9 @@ void Quadplexor(bool newPL, CRGB *dest){
 void Spectral_Waterfall(bool newPL, CRGB *dest){
   patrunproc(newPL, 0, 1, 16, Heatmap);
   EVERY_N_MILLIS(20){
-    memmove8( &dest[XY(0,1)], &dest[XY(0,0)], LEDStotal * sizeof( CRGB) );
+    memmove8( &dest[XY(0,1)], &dest[XY(0,0)], LEDStotal * 3);
     for(int band = 0; band < EQbins; band++){
-      byte tempvalue = map(EQ10000scaled[band], 0, 255, 0, 10000);
+      byte tempvalue = map(EQ10000scaled[band], 0, 10000, 0, 255);
       dest[XY(LEDSx/2+band, 0)] = ColorFromPalette(currentPalette, tempvalue, 127+(tempvalue*0.5), LINEARBLEND);
       dest[XY(LEDSx/2-1-band, 0)] = ColorFromPalette(currentPalette, tempvalue, 127+(tempvalue*0.5), LINEARBLEND);
     }
@@ -408,7 +405,8 @@ void Spectral_Waterfall(bool newPL, CRGB *dest){
 
 void Digital_Rain(bool newPL, CRGB *dest){           // Have to randomize target locations on first boot
   patrunproc(newPL, 20, 1, 16, Pastel);
-  uint8_t numofcodes = 60;    // struct targets {uint8_t x, uint8_t y, uint8_t direction, CHSV colour};
+  const uint8_t numofcodes = 60;    // struct targets {uint8_t x, uint8_t y, uint8_t direction, CHSV colour};
+  static struct target raindrops[numofcodes];
   uint8_t numspeeds = 3;      // how many different speeds of objects
   EVERY_N_MILLIS(10){
     for(uint16_t b = 0; b < numofcodes; b++){
@@ -416,24 +414,24 @@ void Digital_Rain(bool newPL, CRGB *dest){           // Have to randomize target
       uint8_t hitrate = 2 + EQ10000scaled[abs((b+(EQbins-1))%(LEDSx-1)-(EQbins-1))]/LEDSy/6; //triangle mapping
       CRGB fullsat = ColorFromPalette(currentPalette, hue[newPL] + trianglemap*5, 255, LINEARBLEND); // fully saturated value for tails
       CRGB desat = blend(fullsat, CRGB::White, 93); //desaturated value for leads
-      if(targets[newPL][b].y > LEDSy){             // if greater than range, do reset
+      if(raindrops[b].y > LEDSy){             // if greater than range, do reset
         if(hitrate > random8(100)){                 // and random chance
-          targets[newPL][b] = {random8(LEDSx), 0, random8(numspeeds), CHSV(101, 0, 255)}; // create a digit at a random x coordinate
-          dest[XY(targets[newPL][b].x, targets[newPL][b].y)] = desat;       // write to leds
-          targets[newPL][b].y++;       // increase y
+          raindrops[b] = {random8(LEDSx), 0, random8(numspeeds), CHSV(101, 0, 255)}; // create a digit at a random x coordinate
+          dest[XY(raindrops[b].x, raindrops[b].y)] = desat;       // write to leds
+          raindrops[b].y++;       // increase y
         }
       }
-      else if (targets[newPL][b].y == LEDSy){
-        dest[XY(targets[newPL][b].x, targets[newPL][b].y-1)] = fullsat;     // write to leds
-        if(targets[newPL][b].direction >= count[newPL]){
-          targets[newPL][b].y++;
+      else if (raindrops[b].y == LEDSy){
+        dest[XY(raindrops[b].x, raindrops[b].y-1)] = fullsat;     // write to leds
+        if(raindrops[b].direction >= count[newPL]){
+          raindrops[b].y++;
         }
       }
       else {
-        dest[XY(targets[newPL][b].x, targets[newPL][b].y-1)] = fullsat;
-        dest[XY(targets[newPL][b].x, targets[newPL][b].y)] = desat;
-        if(targets[newPL][b].direction >= count[newPL]){
-          targets[newPL][b].y++;
+        dest[XY(raindrops[b].x, raindrops[b].y-1)] = fullsat;
+        dest[XY(raindrops[b].x, raindrops[b].y)] = desat;
+        if(raindrops[b].direction >= count[newPL]){
+          raindrops[b].y++;
         }
       }
     }
@@ -446,7 +444,6 @@ void Digital_Rain(bool newPL, CRGB *dest){           // Have to randomize target
 
 void Canada(bool newPL, CRGB *dest){
   patrunproc(newPL, 255, -1, 16, Newspaper);
-
   for(int y = 0; y < LEDSy; y++){
     for(int x = 0; x < LEDSx; x++){
       if(pgm_read_byte_near(&canadaray[y*LEDSx+x]) == 0){            //white
@@ -464,10 +461,9 @@ void Canada(bool newPL, CRGB *dest){
 
 void Staticeye(bool newPL, CRGB *dest){
   patrunproc(newPL, 255, -1, 16, Newspaper);
-
   for (int col = 0; col < LEDShalfx; col++){         // Write each row with start colour and a random saturation    
     for(int row = 0; row < LEDShalfy; row++){
-      int standin = beatsin8(20, -1, 1);      // Mess with this to create eye layers and adjust how long it stays at 0, which is the static
+      int standin = beatsin8(12, -1, 1);      // Mess with this to create eye layers and adjust how long it stays at 0, which is the static
       dest[XY(col, row)] = ColorFromPalette(currentPalette, hue[newPL] + (col*standin*row+row), 255, LINEARBLEND);      // Target palette, start hue
       dest[XY(col, LEDSy - 1 - row)] = ColorFromPalette(currentPalette, hue[newPL] + (col*standin*row+row), 255, LINEARBLEND);
       dest[XY(LEDSx - 1 - col, row)] = ColorFromPalette(currentPalette, hue[newPL] + (col*standin*row+row), 255, LINEARBLEND);
@@ -475,6 +471,86 @@ void Staticeye(bool newPL, CRGB *dest){
     }
   }
 }
+
+struct dart { // for darts
+  uint8_t x;
+  uint8_t y;
+  uint8_t direction;
+  CHSV colour;
+};
+
+void Darts(bool newPL, CRGB *dest) {
+  patrunproc(newPL, 5, -1, 16, Popsicle);
+  const uint8_t numdarts = 20;
+  struct dart darto[numdarts];
+  const uint8_t dartRate = 2;     // Higher number is fewer blobs
+  uint8_t speed = 25;
+  EVERY_N_MILLIS(speed){
+    //blur( leds, LEDSx, LEDSy, 175);
+    //fadeToBlackBy(dest, LEDStotal, 20);
+    //Spawn new dart
+    if (random8(dartRate) == 0) {
+      uint8_t direction = random8(6);
+      uint8_t spawnX = random8(LEDSx);
+      uint8_t spawnY = random8(LEDSy);
+                
+      if (direction == 0 || direction == 4){      // right to left extra since matrix is longer than tall
+        darto[random8(numdarts)] = {0, spawnY, direction, CHSV(random8(), 255, 255)};
+      } else if (direction == 1 || direction == 5){   // left to right
+        darto[random8(numdarts)] = {LEDSx-1, spawnY, direction, CHSV(random8(), 255, 255)};
+      } else if (direction == 2){   // top to bottom
+        darto[random8(numdarts)] = {spawnX, 0, direction, CHSV(random8(), 255, 255)};
+      } else if (direction == 3){   // bottom to top
+        darto[random8(numdarts)] = {spawnX, LEDSy-1, direction, CHSV(random8(), 255, 255)}; 
+      }
+    }
+  }
+
+  // Draw the darts
+  for (int i = 0; i < numdarts; i++) {
+    if(darto[i].x >= 0 && darto[i].x < LEDSx && darto[i].y >= 0 && darto[i].y < LEDSy){
+      dest[XY(darto[i].x, darto[i].y)] = darto[i].colour;
+    }
+  }
+    
+  EVERY_N_MILLIS(speed){
+    // Move the darts
+    for (int i = 0; i < numdarts; i++) {
+      if (darto[i].direction == 0 || darto[i].direction == 4){      // right to left
+        darto[i].x++;
+      } else if (darto[i].direction == 1 || darto[i].direction == 5){   // left to right
+        darto[i].x--;
+      } else if (darto[i].direction == 2){   // top to bottom
+        darto[i].y++;
+      } else if (darto[i].direction == 3){   // bottom to top
+        darto[i].y--;
+      }
+    }
+  }
+}
+
+void Orbits(bool newPL, CRGB *dest){
+
+}
+
+/*
+void beach(bool newPL, CRGB *dest){
+  EVERY_N_MILLIS(50){
+    fadeToBlackBy(leds, LEDStotal, 20);
+    //fader(20);
+    uint8_t z = 1;
+    //CRGBPalette16 palette = RainbowColors_p;
+    
+    for(int bead = 0; bead < 1; bead++){
+      target[bead][z].x = beatsin8( (bead+1) * 4, 0, (LEDSx)-1);
+      target[bead][z].y = beatsin8( (bead+1) * 3, 0, LEDSy - 1);   
+      ledmatrix.DrawFilledCircle(target[bead][z].x, target[bead][z].y, 2, CHSV(hue*bead, 255, 255));  // void DrawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, CRGB color)
+    }
+  }
+}
+*/
+///////////////////////////// to be converted from Ultramagnet ////////////////////////////////
+
 /*
 void Textualizer(bool newPL, CRGB *dest){
   patrunproc(newPL, 255, 1, 16, Tropicana);
@@ -506,168 +582,7 @@ void Textualizer(bool newPL, CRGB *dest){
 }
 */
 
-struct targets { // for darts
-  uint8_t x;
-  uint8_t y;
-  uint8_t direction;
-  CHSV colour;
-};
-struct targets target[50][2];
-
-void Darts(bool newPL, CRGB *dest) {
-  patrunproc(newPL, 255, -1, 16, Popsicle);
-  const uint8_t numdarts = 20;
-  const uint8_t dartRate = 2;     // Higher number is fewer blobs
-  EVERY_N_MILLIS(50){
-    //blur( leds, LEDSx, LEDSy, 175);
-    fadeToBlackBy(dest, LEDStotal, 20);
-    //Spawn new dart
-    if (random8(dartRate) == 0) {
-      uint8_t direction = random8(6);
-      uint8_t spawnX = random8(LEDSx);
-      uint8_t spawnY = random8(LEDSy);
-                
-      if (direction == 0 || direction == 4){      // right to left extra since matrix is longer than tall
-          target[random8(numdarts)][newPL] = {0, spawnY, direction, CHSV(random8(), 255, 255)};
-        } else if (direction == 1 || direction == 5){   // left to right
-          target[random8(numdarts)][newPL] = {LEDSx-1, spawnY, direction, CHSV(random8(), 255, 255)};
-        } else if (direction == 2){   // top to bottom
-          target[random8(numdarts)][newPL] = {spawnX, 0, direction, CHSV(random8(), 255, 255)};
-        } else if (direction == 3){   // bottom to top
-          target[random8(numdarts)][newPL] = {spawnX, LEDSy-1, direction, CHSV(random8(), 255, 255)}; 
-        }
-    }
-    
-    // Draw the darts
-    for (int i = 0; i < numdarts; i++) {
-      if(target[i][newPL].x >= 0 && target[i][newPL].x < LEDSx && target[i][newPL].y >= 0 && target[i][newPL].y < LEDSy){
-        dest[XY(target[i][newPL].x, target[i][newPL].y)] = target[i][newPL].colour;
-      }
-    }
-    
-    // Move the darts
-    for (int i = 0; i < numdarts; i++) {
-      if (target[i][newPL].direction == 0 || target[i][newPL].direction == 4){      // right to left
-        target[i][newPL].x++;
-      } else if (target[i][newPL].direction == 1 || target[i][newPL].direction == 5){   // left to right
-        target[i][newPL].x--;
-      } else if (target[i][newPL].direction == 2){   // top to bottom
-        target[i][newPL].y++;
-      } else if (target[i][newPL].direction == 3){   // bottom to top
-        target[i][newPL].y--;
-      }
-    }
-  }
-}
-
-void Orbits(bool newPL, CRGB *dest){
-  patrunproc(newPL, 255, -1, 16, Popsicle);
-  static uint16_t startHue = 0;
-  static uint8_t xPhase = 0;
-  static uint8_t yPhase = 64;
-  uint8_t pixelHue = startHue;
-  for (uint16_t i = 0; i < 128; i++) {
-    uint8_t x = cos8(xPhase + i * 2) / (256 / 14);
-    uint8_t y = sin8(yPhase + i * 2) / (256 / 14);
-    //if(i == 1) Serial.println(y);
-    dest[XY(x+0, y+0)] = ColorFromPalette(RainbowColors_p, pixelHue, 255, LINEARBLEND);
-    pixelHue += 2;
-  }
-  for (uint16_t i = 0; i < 128; i++) {
-    uint8_t x = cos8(xPhase + i * 2) / (256 / 14);
-    uint8_t y = sin8(yPhase + i * 2) / (256 / 14);
-    if(i == 1) Serial.println(y);
-    dest[XY(x, y+15)] = ColorFromPalette(RainbowColors_p, pixelHue, 255, LINEARBLEND);
-    pixelHue += 2;
-  }
-  for (uint16_t i = 0; i < 128; i++) {
-    uint8_t x = cos8(xPhase + i * 3) / (256 / 14);
-    uint8_t y = sin8(yPhase + i * 3) / (256 / 14);
-    if(i == 1) Serial.println(y);
-    dest[XY(x+15, y+15)] = ColorFromPalette(RainbowColors_p, pixelHue, 255, LINEARBLEND);
-    pixelHue += 2;
-  }
-  for (uint16_t i = 0; i < 128; i++) {
-    uint8_t x = cos8(xPhase + i * 3) / (256 / 14);
-    uint8_t y = sin8(yPhase + i * 3) / (256 / 14);
-    if(i == 1) Serial.println(y);
-    dest[XY(x+15, y)] = ColorFromPalette(RainbowColors_p, pixelHue, 255, LINEARBLEND);
-    pixelHue += 2;
-  }
-  for (uint16_t i = 0; i < 128; i++) {
-    uint8_t x = cos8(xPhase + i * 14) / (256 / 14);
-    uint8_t y = sin8(yPhase + i * 14) / (256 / 14);
-    if(i == 1) Serial.println(y);
-    dest[XY(x, y+30)] = ColorFromPalette(RainbowColors_p, pixelHue, 255, LINEARBLEND);
-    pixelHue += 2;
-  }
-  for (uint16_t i = 0; i < 128; i++) {
-    uint8_t x = cos8(xPhase + i * 14) / (256 / 14);
-    uint8_t y = sin8(yPhase + i * 14) / (256 / 14);
-    if(i == 1) Serial.println(y);
-    dest[XY(x+15, y+30)] = ColorFromPalette(RainbowColors_p, pixelHue, 255, LINEARBLEND);
-    pixelHue += 2;
-  }
-  EVERY_N_MILLIS(5){
-    startHue += 3;
-    xPhase += 1;
-  }
-}
-
 /*
-void Orbits(bool newPL, CRGB *dest){
-  patrunproc(newPL, 255, -1, 16, Popsicle);
-  static uint16_t startHue = 0;
-  static uint16_t xPhase = 0;
-  static uint16_t yPhase = 64 * 256;
-  uint8_t pixelHue = startHue;
-  for (uint16_t i = 0; i < 128; i++) {
-    uint32_t x = 32767 + cos16(xPhase + i * 2 * 256);
-    uint32_t y = 32767 + sin16(yPhase + i * 2 * 256);
-    x /= 256 / (LEDSx - 1);
-    y /= 256 / (LEDSy - 1);
-    CRGB col = ColorFromPalette(currentPalette, pixelHue, 255, LINEARBLEND);
-    wu_pixel(x, y, &col, dest);
-    pixelHue += 2;
-  }
-  //FastLED.show();
-  //FastLED.clear();
-  // fadeToBlackBy(leds, NUM_LEDS, 32);
-  EVERY_N_MILLIS(1){
-    startHue += 1;
-    xPhase += 150;
-  }
-}*/
-
-/*
-void beach(bool newPL, CRGB *dest){
-  EVERY_N_MILLIS(50){
-    fadeToBlackBy(leds, LEDStotal, 20);
-    //fader(20);
-    uint8_t z = 1;
-    //CRGBPalette16 palette = RainbowColors_p;
-    
-    for(int bead = 0; bead < 1; bead++){
-      target[bead][z].x = beatsin8( (bead+1) * 4, 0, (LEDSx)-1);
-      target[bead][z].y = beatsin8( (bead+1) * 3, 0, LEDSy - 1);   
-      ledmatrix.DrawFilledCircle(target[bead][z].x, target[bead][z].y, 2, CHSV(hue*bead, 255, 255));  // void DrawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, CRGB color)
-    }
-  }
-}
-*/
-///////////////////////////// to be converted from Ultramagnet ////////////////////////////////
-/*
-void Visualizer(bool newPL, CRGB *dest){
-  patrunproc(newPL, 255, 1, 16, Tropicana);  
-  for(int band = 0; band < EQbins; band++){
-    for(int leng = 0; leng < EQscaled[band]; leng++){ // Display as 00 11 22 33 44 55 66 66 55 44 33 22 11 00  CHSV(hue+leng*5-s*7, 255, 255); EQscaled[band]
-      uint8_t ahue = hue[z] +leng*5 +band*5;
-      leds[XY(LEDSx/2+band, leng)] = ColorFromPalette(currentPalette, ahue, 255, LINEARBLEND);
-      leds[XY(LEDSx/2-1-band, leng)] = ColorFromPalette(currentPalette, ahue, 255, LINEARBLEND);
-    }
-  }
-}
-
 void Initialization(bool newPL, CRGB *dest){
   patrunproc(newPL, 255, 1, 16, Tropicana);
 
@@ -754,9 +669,8 @@ void textdisp(bool newPL, CRGB *dest){
 NamedPattern Pattern_List[] = {
   {(pattern_func)Sinelon,            F("Sinelon")},
   {(pattern_func)Illusion,           F("Illusion")},
-  {(pattern_func)Diagonal,           F("Diagonal")},
+  {(pattern_func)Diagong,            F("Diagong")},
   {(pattern_func)Rando,              F("Rando")},
-  {(pattern_func)Scan,               F("Scan")},
   {(pattern_func)Confetti,           F("Confetti")},
   {(pattern_func)Vortex,             F("Vortex")},
   {(pattern_func)Tropic,             F("Tropic")},
@@ -766,7 +680,7 @@ NamedPattern Pattern_List[] = {
   {(pattern_func)Gentle_Leviathan,   F("Gentle Leviathan")},
   {(pattern_func)Diamondmaw,         F("Diamondmaw")},
   {(pattern_func)Him,                F("Him")},
-  {(pattern_func)lilminfuk,          F("lilminfuk")},
+  {(pattern_func)Praxis,             F("Praxis")},
   {(pattern_func)Barbarism,          F("Barbarism")},
   {(pattern_func)DNA,                F("DNA")},
   {(pattern_func)Gargyle,            F("Gargyle")},

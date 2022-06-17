@@ -1,5 +1,8 @@
 #ifndef Myriad_Teensy_FFT_h
 #define Myriad_Teensy_FFT_h
+
+// From: https://github.com/Diod-dev/New_Visualizer_Skeleton
+
 #include <Arduino.h>
 #ifndef FASTLED_VERSION
   //#include <FastLED_Timers.h>
@@ -37,7 +40,12 @@ extern float EQstDev[];
 extern uint16_t EQbeatInterval[];
 extern uint16_t EQbeatIntervalOld[];
 extern uint16_t EQconstantBeatCounter[];
-//elapsedMillis EQbeatTimer[EQbins];
+extern uint16_t EQmaxConstBeat;
+extern uint16_t EQconstBeatBin; // This bin has the maximum constant beat
+extern bool EQconstBeat;  // Constant beat true?
+extern elapsedMillis EQbeatTimer[EQbins];
+extern int16_t EQbinScore[EQbins];
+
 extern const uint8_t ledPin;
 extern bool ledState;
 extern uint16_t fftindex[];
@@ -56,6 +64,8 @@ void EQbeatDetection();
 void EQbeatBuckets();
 void EQbeatBlink();
 void EQprintDetectedBeats();
+void EQbeatTiming();
+void EQbeatScoring();
 
 float EQfindE(uint16_t bands, uint16_t bins); // Used for determining FFT binning
 void EQcalcbins();                 // Used 

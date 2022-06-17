@@ -57,7 +57,7 @@ void huepusher(bool newPL, int8_t hueinc,  uint8_t huespeed){ // Advance appropr
   }
 }
 
-void fader(bool newPL, byte fadeval) {  // fades led array by given amount
+void fader(bool newPL, byte fadeval) {  // Fades led array by given amount
   if (newPL == true){
     fadeToBlackBy( firstbuffer, LEDStotal, fadeval);    // fade first array if pattern is new
   } else if (newPL == false){
@@ -65,7 +65,7 @@ void fader(bool newPL, byte fadeval) {  // fades led array by given amount
   }
 }
 
-void blackout(CRGB *targetarray) { // wipes target array
+void blackout(CRGB *targetarray) { // Wipes target array
   for ( int i = 0; i < LEDStotal; i++) {
     targetarray[i] = CRGB(0, 0, 0);
   }
@@ -73,7 +73,7 @@ void blackout(CRGB *targetarray) { // wipes target array
 
 void patchangeproc(int newpatnum){ // Every time you switch patterns run this to begin crossfading
   blackout(secondbuffer);                           //purge the old buffer
-  memcpy8 (secondbuffer, firstbuffer, LEDStotal);    // copy data from first buffer to second, for continuity
+  memcpy8 (secondbuffer, firstbuffer, LEDStotal);   // copy data from first buffer to second, for continuity
   blackout(firstbuffer);                            // wipe the new buffer for incoming pattern
   crossct = 0;                  // reset the blend amount
   oldpattern = patternum;       // set the current pattern to be the old one so we can make it use the same variables
@@ -82,17 +82,9 @@ void patchangeproc(int newpatnum){ // Every time you switch patterns run this to
   rowcount[1] = 0;
   colcount[0] = colcount[1];    // new pattern is 1, because it is TRUE with newPL
   colcount[1] = 0;
-  uint16_t noisesize = sizeof(noise[0]);
-  //for (uint16_t i = 0; i < numnoise; i++){
-  memcpy(&noise[0], &noise[1], noisesize);
-  memcpy(&targets[0], &targets[1], noisesize);
-  //}
-  //target
-  //noise[2][numnoise][2]
-  //target targets[2][numnoise]
-
   count[0] = count[1];
   count[1] = 0;
+  
   hue[0] = hue[1];
   hue[1] = 0;
   Serial.print("New pattern : ");
@@ -247,22 +239,18 @@ void crossfader() {  ////////////////////////// Crossfader /////////////////////
 #else
 void crossfader() {  ////////////////////////// Crossfader //////////////////////////////////////////
   if (crossct >= 255) { 
-    // This can be optimized to not copy
     Pattern_List[patternum].Pattern(true, firstbuffer);   // run only newest pattern if crossfading complete
-    for (uint16_t i = 0; i < LEDStotal; i++) {   // Need to use writedata for continuity
-      writedata[i] = firstbuffer[i];   // Blend arrays of LEDs, third value is blend %
-    }
-    napplyGamma_video(writedata, LEDStotal, STATEpalshuffleinterval/10);
+    memcpy8(writedata, firstbuffer, LEDStotal*3);
+    //napplyGamma_video(writedata, LEDStotal, 2.8);
   }
   else if (crossct < 255) {
     EVERY_N_MILLIS(20) {
       crossct += 1;           // higher increase faster xfade
     }
     Pattern_List[patternum].Pattern(true, firstbuffer);   // Run the newest pattern and save to array, bool true = newpat
-    napplyGamma_video(firstbuffer, LEDStotal, STATEpalshuffleinterval/10);
+    //napplyGamma_video(firstbuffer, LEDStotal, 2.8);
     Pattern_List[oldpattern].Pattern(false, secondbuffer);    // Run the old pattern and save to array, bool false = oldpat
-    napplyGamma_video(secondbuffer, LEDStotal, STATEpalshuffleinterval/10);
-    //memcpy8 (leds2, leds, LEDStotal); // __attribute__((noinline))
+    //napplyGamma_video(secondbuffer, LEDStotal, 2.8);
     for (uint16_t i = 0; i < LEDStotal; i++) {   // blend em
       writedata[i] = blend( secondbuffer[i], firstbuffer[i], crossct);   // Blend arrays of LEDs, third value is blend %
     }

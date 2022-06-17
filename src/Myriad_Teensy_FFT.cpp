@@ -57,7 +57,12 @@ float EQstDev[EQbins];
 uint16_t EQbeatInterval[EQbins];
 uint16_t EQbeatIntervalOld[EQbins];
 uint16_t EQconstantBeatCounter[EQbins];
-//elapsedMillis EQbeatTimer[EQbins];
+uint16_t EQmaxConstBeat;
+uint16_t EQconstBeatBin; // This bin has the maximum constant beat
+bool EQconstBeat;  // Constant beat true?
+elapsedMillis EQbeatTimer[EQbins];
+int16_t EQbinScore[EQbins];
+
 const uint8_t ledPin = 25;
 extern bool ledState;
 bool ledState;
@@ -379,7 +384,7 @@ void EQbeatDetection() {
     // Beat is detected here. Must be greater than the average+(2.3*st.dev) and greater than 0.004212 which may need to be adjusted
     if (EQbuff[i] > EQaverage[i] + 2.5 * EQstDev[i] && EQbuff[i] > 0.004212) {
       if (EQbeatDetected[i] == 2){
-        EQbeatDetected[i] = 1;
+        EQbeatDetected[i] = 1;          // Stale peaks get demoted
       }
       if (EQbeatDetected[i] == 0){
         EQbeatDetected[i] = 2;
@@ -388,7 +393,7 @@ void EQbeatDetection() {
     }
     // This is where 1's get reset to 0. If beat is not detected in that frequency, set it's status to 0.
     else {
-      if (EQbeatDetected[i] == 2){ // not entirely sure why this is here
+      if (EQbeatDetected[i] == 2){ // Purge stale beats that never got caught in first loop
         EQbeatDetected[i] = 1;
       }
       if (EQbeatDetected[i] == 1) {
@@ -418,6 +423,90 @@ void EQbeatBuckets(){
   } else {
    //Serial.println("nope");
   }
+}
+
+void EQbeatTiming(){
+  for(uint16_t i = 0; i < EQbins; i++){
+    //int beatTimerStandin = beatTimer[i]; 
+    if (EQbeatDetected[i] == 2) { // if beat has been detected
+      if (EQbeatTimer[i] < 200){ // and it isn't 200 ms from the last one
+        EQbeatDetected[i] = 1; // but if it is, cancel the beat
+      }
+      else {
+        EQbeatInterval[i] = EQbeatTimer[i];  // a beat has been detected. Get the time since last beat.
+        // could use absolute value below
+        if ((EQbeatIntervalOld[i] - EQbeatInterval[i]) < 30 && (EQbeatIntervalOld[i] - EQbeatInterval[i]) > -30){ // If the time between the new interval and old interval is less than 30 ms 
+          EQconstantBeatCounter[i]++;
+        }
+        EQbeatTimer[i] = 0;
+        EQbeatIntervalOld[i] = EQbeatInterval[i];
+      }
+    }
+    
+    if (EQconstantBeatCounter[i] > 0 && EQbeatTimer[i] > EQbeatInterval[i] + 50){
+      EQconstantBeatCounter[i] = 0; // clears beat counter when more time than the beat has passed
+    }
+
+    // These print statements will print the constant beat counter of each bin
+    if (i == EQbins - 1){
+      Serial.println(EQconstantBeatCounter[i]);
+    }
+    else {
+      Serial.print(EQconstantBeatCounter[i]);
+      Serial.print("\t");
+    }
+
+    if ( i < 4) {
+      if (EQconstantBeatCounter[i] > EQmaxConstBeat) {
+        EQmaxConstBeat = EQconstantBeatCounter[i];
+        EQconstBeatBin = i;
+      }
+    }
+    if (EQmaxConstBeat > 10){
+      EQconstBeat = true;
+    }
+    else {
+      EQconstBeat = false;
+    }
+  }
+}
+
+// scoreBins figures out which FFT bins have the best beats to visualize.
+void EQbeatScoring(){
+  for(uint16_t i = 0; i < EQbins; i++){
+    // If there's a constant beat above 5 counts, increase score by 2
+    if (EQconstantBeatCounter[i] > 5)
+      EQbinScore[i] += 2;
+
+    // If there's a beat detected, increase score by 1
+    if (EQbeatDetected[i] == 2)
+      EQbinScore[i] += 1;
+
+    // If an FFT bin's score is high and it doesn't have a constant beat, lower that score
+    if (EQbinScore[i] > 300 && EQconstantBeatCounter[i] < 2)
+      EQbinScore[i] -= 2;
+
+    // These print statements will print the score of each bin
+    //if (i == numFFTBins - 1)
+    //	Serial.println(binScores[i]);
+    //else {
+    //	Serial.print(binScores[i]);
+    //	Serial.print("\t");
+    //}
+  }
+/*
+  for (int i = 0; i < 4; i++) {
+		// Find the beats in the low, mid, and high ranges
+		if (binScore[i] > binScore[lowBeatBin]){
+			lowBeatBin = i;
+    }
+		if (binScore[i + 5] > binScore[midBeatBin]){ // binScore[4] is not measured
+			midBeatBin = i + 5;
+    }
+		if (binScore[i + 9] > binScore[highBeatBin]){
+			highBeatBin = i + 9;
+    }
+*/
 }
 
 void EQcalibration(){   // Calibrate values for noisefloor() gate function
@@ -551,13 +640,15 @@ void EQcalcbins(){ // Calculates the boundaries of each EQbin with EQbins, and E
 
 void EQproc(){
   EVERY_N_MILLIS(EQreadint){
-    EQdofft();            // get data
+    EQdofft();          // get data
     EQstats();          // do the math
     EQnoisegate();      // apply filters
-    EQupdatevalues();
+    EQupdatevalues();   // update usable data
     EQbeatDetection();  // find beat
     EQbeatBuckets();    // also find beat, i guess
-    EQbeatBlink();    // basic blink on builtinled
+    EQbeatBlink();      // basic blink on builtinled
+    EQbeatTiming();
+    EQbeatScoring();
   }
   EQupdatevalues();
 }
@@ -599,49 +690,3 @@ void EQproc(byte printmany, bool printone, uint8_t target){ // (1=buffer 2=scale
     }
   }
 }
-
-/*
-void beatTiming(int i){
-  //int beatTimerStandin = beatTimer[i]; 
-  if (EQbeatDetected[i] == 2) { // if beat has been detected
-    if (EQbeatTimer[i] < 200){ // and it isn't 200 ms from the last one
-      EQbeatDetected[i] = 1; // but if it is, cancel the beat
-    }
-    else {
-      EQbeatInterval[i] = EQbeatTimer[i];  // a beat has been detected. Get the time since last beat.
-      // could use absolute value below
-      if ((EQbeatIntervalOld[i] - EQbeatInterval[i]) < 30 && (EQbeatIntervalOld[i] - EQbeatInterval[i]) > -30){ // If the time between the new interval and old interval is less than 30 ms 
-        EQconstantBeatCounter[i]++;
-      }
-      EQbeatTimer[i] = 0;
-      EQbeatIntervalOld[i] = EQbeatInterval[i];
-    }
-  }
-  
-  if (EQconstantBeatCounter[i] > 0 && EQbeatTimer[i] > EQbeatInterval[i] + 50){
-    EQconstantBeatCounter[i] = 0; // clears beat counter when more time than the beat has passed
-  }
-
-  // These print statements will print the constant beat counter of each bin
-  if (i == EQbins - 1){
-    Serial.println(EQconstantBeatCounter[i]);
-  }
-  else {
-    Serial.print(EQconstantBeatCounter[i]);
-    Serial.print("\t");
-  }
-
-  if ( i < 4) {
-    if (EQconstantBeatCounter[i] > EQmaxConstBeat) {
-      EQmaxConstBeat = EQconstantBeatCounter[i];
-      EQconstBeatBin = i;
-    }
-  }
-  if (EQmaxConstBeat > 10){
-    EQconstBeat = true;
-  }
-  else {
-    EQconstBeat = false;
-  }
-}
-    */
