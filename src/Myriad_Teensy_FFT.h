@@ -27,35 +27,34 @@ extern uint8_t EQbeatDetected[];
 extern bool EQbeat;
 // FFT Buffers and boundaries
 // FFT parameters
-extern float EQnoisefloor[EQbins];
-extern float EQmintops[EQbins];
-extern float EQbuff[];    // Input buffer collects data directly from the FFT
-extern float EQdecay[];   // Version of FFT data that 
-extern float EQmaxes[];   // A moving maxiumum for each FFT band
-extern float EQmins[];
-extern Statistic EQstatstotal[];
-extern float EQaverage[];
-extern float EQstDev[];
+//extern float EQnoisefloor[EQbins];
+//extern float EQmintops[EQbins];
+//extern float EQbuff[];    // Input buffer collects data directly from the FFT
+extern float EQdecay[];   // Version of FFT data that decays over time
+//extern float EQmaxes[];   // A moving maxiumum for each FFT band
+//extern float EQmins[];
+//extern Statistic EQstatstotal[];
+//extern float EQaverage[];
+//extern float EQstDev[];
 // Beat
-extern uint16_t EQbeatInterval[];
-extern uint16_t EQbeatIntervalOld[];
-extern uint16_t EQconstantBeatCounter[];
-extern uint16_t EQmaxConstBeat;
-extern uint16_t EQconstBeatBin; // This bin has the maximum constant beat
-extern bool EQconstBeat;  // Constant beat true?
-extern elapsedMillis EQbeatTimer[EQbins];
-extern int16_t EQbinScore[EQbins];
+//extern uint16_t EQbeatInterval[];
+//extern uint16_t EQbeatIntervalOld[];
+//extern uint16_t EQconstantBeatCounter[];
+//extern uint16_t EQmaxConstBeat;
+//extern uint16_t EQconstBeatBin; // This bin has the maximum constant beat
+//extern bool EQconstBeat;  // Constant beat true?
+//extern elapsedMillis EQbeatTimer[EQbins];
+//extern int16_t EQbinScore[EQbins];
 
-extern const uint8_t ledPin;
+//extern const uint8_t ledPin;
 extern bool ledState;
-extern uint16_t fftindex[];
-extern uint16_t fftindex256[];
-extern uint16_t fftindex1024[];
+//extern uint16_t fftindex[];
+//extern uint16_t fftindex256[];
+//extern uint16_t fftindex1024[];
 
-extern bool ledState;
 void EQsetup();
-
 void EQdofft();
+
 void EQnoisegate();
 void EQupdatevalues();
 void EQstats();

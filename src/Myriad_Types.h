@@ -23,26 +23,6 @@ extern const uint16_t NUMpalettes;
 #define _min(a,b) ((a)<(b)?(a):(b))
 #define _max(a,b) ((a)>(b)?(a):(b))
 
-/*
-uint16_t trianglewave16(uint16_t in)
-{
-    if( in & 0x8000) {
-        in = 65535 - in;
-    }
-    uint16_t out = in << 1;
-    return out;
-}
-
-uint16_t beattri16( accum88 beats_per_minute, uint16_t lowest = 0, uint16_t highest = 65535, uint32_t timebase = 0, uint16_t phase_offset = 0){
-    uint16_t beat = beat16( beats_per_minute, timebase);
-    uint16_t beattri = (trianglewave16(beat + phase_offset));
-    uint16_t rangewidth = highest - lowest;
-    uint16_t scaledbeat = scale16( beattri, rangewidth);
-    uint16_t result = lowest + scaledbeat;
-    return result;
-}
-*/
-
 typedef uint8_t u8;
 typedef int8_t i8;
 typedef uint16_t u16;

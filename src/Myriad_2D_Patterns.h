@@ -342,7 +342,7 @@ void Midearth(bool newPL, CRGB *dest){
 
 void Waterfall(bool newPL, CRGB *dest){
   patrunproc(newPL, 255, -1, 8, CloudColors);
-  int16_t twistdir = beatsin16(3, -30000, 30000);
+  int16_t twistdir = beatsin16(3, -30000, 30000); // this will underflow
   //Serial.println(twistdir);
   for (int row = 0; row < rowcount[newPL]; row++){
     for (int col = 0; col < LEDSx; col++){
